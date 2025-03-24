@@ -48,7 +48,7 @@ if st.button("Сгенерировать текст"):
     # Добавляем кнопку "Скопировать" с использованием HTML и JavaScript
     st.markdown(
         f"""
-        <button onclick="navigator.clipboard.writeText('{text_for_js}')">Скопировать текст</button>
+        <button onclick="navigator.clipboard.writeText(`{text}`)">Скопировать текст</button>
         <script>
             document.querySelector('button').addEventListener('click', function() {{
                 navigator.clipboard.writeText(`{text}`).then(function() {{
