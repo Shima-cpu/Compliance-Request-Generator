@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 # Фиксированные части текста
 intro = """Добрый день,
@@ -42,22 +43,23 @@ if st.button("Сгенерировать текст"):
     # Отображение сгенерированного текста
     st.text_area("Сгенерированный текст:", text, height=300)
 
-    # Подготовка текста для JavaScript, экранирование символов
+    # Подготовка текста для использования в JavaScript
     text_for_js = text.replace("\n", "\\n").replace("'", "\\'")
 
-    # Добавление кнопки для копирования текста через JavaScript
-    st.markdown(
+    # Добавление кнопки для копирования текста через HTML и JavaScript
+    components.html(
         f"""
-        <button onclick="navigator.clipboard.writeText('{text_for_js}')">Скопировать текст</button>
+        <button id="copyButton">Скопировать текст</button>
         <script>
-            document.querySelector('button').addEventListener('click', function() {{
-                navigator.clipboard.writeText(`{text}`).then(function() {{
+            document.getElementById('copyButton').addEventListener('click', function() {{
+                const text = `{text_for_js}`;
+                navigator.clipboard.writeText(text).then(function() {{
                     alert('Текст скопирован в буфер обмена!');
-                }}, function(err) {{
+                }}).catch(function(err) {{
                     alert('Ошибка копирования текста!');
                 }});
             }});
         </script>
         """, 
-        unsafe_allow_html=True
+        height=100
     )
