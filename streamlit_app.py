@@ -1,4 +1,5 @@
 import streamlit as st
+import pyperclip
 
 # Фиксированные части текста
 intro = """Добрый день,
@@ -38,4 +39,11 @@ query = st.selectbox("Выберите тип запроса:", list(queries.key
 if st.button("Сгенерировать текст"):
     middle = queries[query]
     text = f"{intro}\n\n{middle}\n\n{closing}"
+    
+    # Отображение сгенерированного текста
     st.text_area("Сгенерированный текст:", text, height=300)
+    
+    # Добавление кнопки для копирования
+    if st.button("Скопировать текст"):
+        pyperclip.copy(text)  # Копируем текст в буфер обмена
+        st.success("Текст скопирован в буфер обмена!")
