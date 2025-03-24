@@ -30,7 +30,7 @@ queries = {
 }
 
 # Заголовок страницы
-st.title("Генератор текста для запросов")
+st.title("Генератор запросов Compliance")
 
 # Выбор запроса
 query = st.selectbox("Выберите тип запроса:", list(queries.keys()))
