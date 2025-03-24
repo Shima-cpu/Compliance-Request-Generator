@@ -42,10 +42,13 @@ if st.button("Сгенерировать текст"):
     # Отображение сгенерированного текста
     st.text_area("Сгенерированный текст:", text, height=300)
 
-    # Добавление кнопки "Скопировать" с помощью HTML
+    # Подготовка текста для использования в JavaScript
+    text_for_js = text.replace("\n", "\\n").replace("'", "\\'")
+
+    # Добавляем кнопку "Скопировать" с использованием HTML и JavaScript
     st.markdown(
         f"""
-        <button onclick="navigator.clipboard.writeText(`{text}`)">Скопировать текст</button>
+        <button onclick="navigator.clipboard.writeText('{text_for_js}')">Скопировать текст</button>
         """, 
         unsafe_allow_html=True
     )
