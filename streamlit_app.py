@@ -1,5 +1,5 @@
 import streamlit as st
-import urllib.parse
+import html
 
 # Фиксированные части текста
 intro = """Добрый день,
@@ -43,11 +43,11 @@ if st.button("Сгенерировать текст"):
     # Отображение сгенерированного текста
     st.text_area("Сгенерированный текст:", text, height=300)
 
-    # Экранирование текста для использования в JavaScript
-    escaped_text = urllib.parse.quote(text)
+    # Экранирование текста для HTML и JavaScript
+    escaped_text = html.escape(text).replace("\n", "<br>")
 
     # Добавляем кнопку "Copy to Clipboard" с использованием JavaScript
     copy_button_html = f"""
-    <button onclick="navigator.clipboard.writeText(decodeURIComponent('{escaped_text}'))">Скопировать текст</button>
+    <button onclick="navigator.clipboard.writeText('{escaped_text}')">Скопировать текст</button>
     """
     st.markdown(copy_button_html, unsafe_allow_html=True)
