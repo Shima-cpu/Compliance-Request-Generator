@@ -49,6 +49,15 @@ if st.button("Сгенерировать текст"):
     st.markdown(
         f"""
         <button onclick="navigator.clipboard.writeText('{text_for_js}')">Скопировать текст</button>
+        <script>
+            document.querySelector('button').addEventListener('click', function() {{
+                navigator.clipboard.writeText(`{text}`).then(function() {{
+                    alert('Текст скопирован в буфер обмена!');
+                }}, function(err) {{
+                    alert('Ошибка копирования текста!');
+                }});
+            }});
+        </script>
         """, 
         unsafe_allow_html=True
     )
