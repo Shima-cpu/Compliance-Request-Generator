@@ -1,5 +1,5 @@
 import streamlit as st
-import pyperclip
+from streamlit_clipboard import st_clipboard
 
 # Фиксированные части текста
 intro = """Добрый день,
@@ -43,7 +43,5 @@ if st.button("Сгенерировать текст"):
     # Отображение сгенерированного текста
     st.text_area("Сгенерированный текст:", text, height=300)
     
-    # Добавление кнопки для копирования
-    if st.button("Скопировать текст"):
-        pyperclip.copy(text)  # Копируем текст в буфер обмена
-        st.success("Текст скопирован в буфер обмена!")
+    # Кнопка для копирования
+    st_clipboard(text)  # Использование streamlit_clipboard для копирования текста
