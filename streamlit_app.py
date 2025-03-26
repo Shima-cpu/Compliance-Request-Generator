@@ -117,7 +117,7 @@ if st.button("Сгенерировать текст"):
     # Добавление кнопки для копирования текста через HTML и JavaScript
     components.html(
         f"""
-        <button id="copyButton">Скопировать текст</button>
+        <button id="copyButton">Copy</button>
         <script>
             document.getElementById('copyButton').addEventListener('click', function() {{
                 const text = `{text_for_js}`;
