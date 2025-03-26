@@ -1,6 +1,9 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
+# Заголовок страницы
+st.title("Compliance генератор запросов")
+
 # Фиксированные части текста на русском и английском
 intro_texts = {
     "Русский": """Добрый день,
@@ -133,22 +136,10 @@ query = st.selectbox("Выберите тип запроса:", list(queries.key
 # Кнопка для генерации текста
 if st.button("Сгенерировать текст"):
     text = f"{intro_texts[language]}\n\n{queries[query][language]}\n\n{closing_texts[language]}"
-    
-    # Отображение сгенерированного текста
     st.text_area("Сгенерированный текст:", text, height=300)
-    
-    # Подготовка текста для JavaScript
-    text_for_js = text.replace("\n", "\\n").replace("'", "\\'")
-    
-    # Кнопка копирования
-    components.html(f"""
-        <button id="copyButton">Скопировать текст</button>
-        <script>
-            document.getElementById('copyButton').addEventListener('click', function() {{
-                navigator.clipboard.writeText('{text_for_js}').then(() => {{
-                    alert('Текст скопирован!');
-                }});
-            }});
-        </script>
-    """, height=100)
-
+    components.html(
+        f"""
+        <button onclick="navigator.clipboard.writeText(`{text.replace('\n', '\\n').replace('"', '\"')}`)">Скопировать текст</button>
+        """,
+        height=50
+    )
