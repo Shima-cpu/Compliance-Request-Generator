@@ -93,7 +93,7 @@ In this regard, we ask you to provide a valid identity document and a utility bi
 }
 
 # Заголовок страницы
-st.title("Генератор текста для запросов")
+st.title("Compliance генератор запросов")
 
 # Выбор запроса
 query = st.selectbox("Выберите тип запроса:", list(queries.keys()))
