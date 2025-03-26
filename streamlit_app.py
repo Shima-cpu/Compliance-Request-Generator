@@ -26,7 +26,7 @@ Best regards,"""
 
 # Варианты для середины текста на русском и английском
 queries = {
-    "SOF (Источник средств)": {
+    "SOF": {
         "Русский": """
 В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.
 
@@ -42,7 +42,7 @@ Attached is a list of documents that can be used to verify the origin of funds.
 You can provide us with any documents such as salary certificates, tax returns, business income, property sales, etc., or any other document listed in the attached document.
         """
     },
-    "ID (Идентификация)": {
+    "ID": {
         "Русский": """
 В связи с этим мы просим вас предоставить актуальный паспорт или иной документ, удостоверяющий вашу личность.
         """,
@@ -50,7 +50,7 @@ You can provide us with any documents such as salary certificates, tax returns, 
 In this regard, we ask you to provide a valid passport or other identity document.
         """
     },
-    "UB (Подтверждение адреса)": {
+    "UB": {
         "Русский": """
 В связи с этим мы просим вас предоставить счет за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.
         """,
