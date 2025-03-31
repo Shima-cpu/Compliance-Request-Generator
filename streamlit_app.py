@@ -112,7 +112,7 @@ language = st.radio("Выберите язык запроса / Select request l
 # Кнопка для генерации текста
 if st.button("Сгенерировать текст"):
     text = f"{intro_texts[language]}\n\n{queries[query][language]}\n\n{closing_texts[language]}"
-    st.text_area("Сгенерированный текст:", text, height=300)
+    st.text_area("Результат:", text, height=300)
     components.html(
         f"""
         <button id="copyButton">Copy text</button>
