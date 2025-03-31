@@ -70,8 +70,8 @@ if st.button("Сгенерировать текст"):
     middle = queries[query]
     text = f"{intro}\n\n{middle}\n\n{closing}"
     
-    # Отображение сгенерированного текста с одинаковыми отступами
-    st.markdown(f"<pre style='white-space: pre-line; margin-bottom: 10px;'>{text}</pre>", unsafe_allow_html=True)
+    # Отображение сгенерированного текста в текстовом поле с одинаковыми отступами
+    st.text_area("Сгенерированный текст:", text, height=300)
 
     # Подготовка текста для использования в JavaScript
     text_for_js = text.replace("\n", "\\n").replace("'", "\\'")
@@ -93,4 +93,3 @@ if st.button("Сгенерировать текст"):
         """, 
         height=100
     )
-
