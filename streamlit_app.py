@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # Заголовок страницы
-st.title("Compliance генератор запросов")
+st.title("Compliance request template")
 
 # Фиксированные части текста на русском и английском
 intro_texts = {
@@ -104,10 +104,10 @@ Moreover, please provide a utility bill or a bank statement to confirm your resi
 }
 
 # Выбор запроса
-query = st.selectbox("Выберите тип запроса:", list(queries.keys()))
+query = st.selectbox("Выберите шаблон запроса / Select request template:", list(queries.keys()))
 
 # Выбор языка
-language = st.radio("Выберите язык / Select language:", list(intro_texts.keys()))
+language = st.radio("Выберите язык запроса / Select request language:", list(intro_texts.keys()))
 
 # Кнопка для генерации текста
 if st.button("Сгенерировать текст"):
@@ -115,7 +115,7 @@ if st.button("Сгенерировать текст"):
     st.text_area("Сгенерированный текст:", text, height=300)
     components.html(
         f"""
-        <button id="copyButton">Скопировать текст</button>
+        <button id="copyButton">Copy text</button>
         <script>
             document.getElementById('copyButton').addEventListener('click', function() {{
                 const text = `{text.replace("\n", "\\n").replace("'", "\\'")}`;
