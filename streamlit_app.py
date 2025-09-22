@@ -115,7 +115,7 @@ def js_escape(s: str) -> str:
 if st.button("Generate text"):
     if not selected_parts:
         # если ничего не выбрано
-        placeholder_text = "Please choose request elements"
+        placeholder_text = "Please choose request options"
         st.text_area("Result:", placeholder_text, height=320)
     else:
         middle_text = render_middle_adaptive(language, selected_parts)
