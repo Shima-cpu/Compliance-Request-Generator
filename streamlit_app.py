@@ -3,9 +3,9 @@ import streamlit.components.v1 as components
 
 st.title("Compliance request template")
 
-# ----- фиксированные части -----
+# ----- fixed intro and closing texts -----
 intro_texts = {
-    "Русский": """Добрый день,
+    "Russian": """Добрый день,
 
 в соответствии с требованиями регулятора FSC Белиза и законодательством по борьбе с отмыванием денежных средств RoboForex Ltd обязана на регулярной основе осуществлять постоянную проверку и мониторинг личной информации своих клиентов.""",
     "English": """Hello,
@@ -14,7 +14,7 @@ in accordance with the requirements of the FSC Belize regulator and anti-money l
 }
 
 closing_texts = {
-    "Русский": """Мы ценим ваше сотрудничество.
+    "Russian": """Мы ценим ваше сотрудничество.
 
 Если у вас есть какие-либо вопросы, пожалуйста, свяжитесь с нами.
 
@@ -26,11 +26,10 @@ If you have any questions, please contact us.
 Best regards,"""
 }
 
-# ----- адаптивные блоки -----
-# lead — первый, add — второй, final — третий и последующие
+# ----- adaptive blocks -----
 blocks = {
     "SOF": {
-        "Русский": {
+        "Russian": {
             "lead": "В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.",
             "add":  "Также, пожалуйста, предоставьте информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.",
             "final": "Помимо этого, пожалуйста, предоставьте информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.",
@@ -44,7 +43,7 @@ blocks = {
         }
     },
     "ID": {
-        "Русский": {
+        "Russian": {
             "lead": "В связи с этим, мы просим вас предоставить скан или фото актуального паспорта, удостоверяющего вашу личность.",
             "add":  "Также, пожалуйста, предоставьте скан или фото актуального паспорта, удостоверяющего вашу личность.",
             "final": "Помимо этого, пожалуйста, предоставьте скан или фото актуального паспорта, удостоверяющего вашу личность.",
@@ -58,7 +57,7 @@ blocks = {
         }
     },
     "UB": {
-        "Русский": {
+        "Russian": {
             "lead": "В связи с этим, мы просим вас предоставить счёт за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.",
             "add":  "Также, пожалуйста, предоставьте счёт за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.",
             "final": "Помимо этого, пожалуйста, предоставьте счёт за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.",
@@ -73,22 +72,22 @@ blocks = {
     }
 }
 
-# Мультивыбор
+# ----- UI -----
 selected_parts = st.multiselect(
     "Choose your request:",
     options=["SOF", "ID", "UB"],
     default=["SOF"]
 )
 
-# Фиксированный приоритет
+language = st.radio("Select request language:", list(intro_texts.keys()))
+
+# Fixed order: SOF → ID → UB
 PRIORITY = ["SOF", "ID", "UB"]
 
 def sort_by_priority(keys):
     return [k for k in PRIORITY if k in keys]
 
-language = st.radio("Select request language:", list(intro_texts.keys()))
-
-# ----- генерация середины с учётом lead / add / final -----
+# ----- build middle part -----
 def render_middle_adaptive(lang: str, reqs: list) -> str:
     ordered = sort_by_priority(reqs)
     parts = []
@@ -103,7 +102,7 @@ def render_middle_adaptive(lang: str, reqs: list) -> str:
         parts.append((first_sentence + seg.get("rest", "")).strip())
     return "\n\n".join(parts)
 
-# экранирование для JS
+# Escape text for JS
 def js_escape(s: str) -> str:
     return (
         s.replace("\\", "\\\\")
@@ -112,26 +111,31 @@ def js_escape(s: str) -> str:
          .replace("\n", "\\n")
     )
 
-# ----- генерация -----
+# ----- generate -----
 if st.button("Generate text"):
-    middle_text = render_middle_adaptive(language, selected_parts) if selected_parts else ""
-    text = f"{intro_texts[language]}\n\n{middle_text}\n\n{closing_texts[language]}".strip()
+    if not selected_parts:
+        # если ничего не выбрано
+        placeholder_text = "Please choose request elements"
+        st.text_area("Result:", placeholder_text, height=320)
+    else:
+        middle_text = render_middle_adaptive(language, selected_parts)
+        text = f"{intro_texts[language]}\n\n{middle_text}\n\n{closing_texts[language]}".strip()
 
-    st.text_area("Result:", text, height=320)
+        st.text_area("Result:", text, height=320)
 
-    components.html(
-        f"""
-        <button id="copyButton">Copy text</button>
-        <script>
-            document.getElementById('copyButton').addEventListener('click', function() {{
-                const text = `{js_escape(text)}`;
-                navigator.clipboard.writeText(text).then(function() {{
-                    alert('Текст скопирован в буфер обмена!');
-                }}).catch(function(err) {{
-                    alert('Ошибка копирования текста!');
+        components.html(
+            f"""
+            <button id="copyButton">Copy text</button>
+            <script>
+                document.getElementById('copyButton').addEventListener('click', function() {{
+                    const text = `{js_escape(text)}`;
+                    navigator.clipboard.writeText(text).then(function() {{
+                        alert('Text copied to clipboard!');
+                    }}).catch(function(err) {{
+                        alert('Error copying text!');
+                    }});
                 }});
-            }});
-        </script>
-        """,
-        height=100
-    )
+            </script>
+            """,
+            height=100
+        )
