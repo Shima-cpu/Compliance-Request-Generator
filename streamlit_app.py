@@ -27,7 +27,7 @@ If you have any questions, please contact us.
 Best regards,"""
 }
 
-# Словарь с вариантами для середины текста
+# Блоки середины (оставляем исходные тексты, но будем собирать из отдельных кусков)
 queries = {
     "SOF": {
         "Русский": """В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.
@@ -49,76 +49,36 @@ You can provide us with any documents, such as salary certificates, tax returns,
         "Русский": """В связи с этим, мы просим вас предоставить счет за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.""",
         "English": """In this regard, we ask you to provide a utility bill or a bank statement to confirm your residential address."""
     },
-    "SOF + ID": {
-        "Русский": """В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.
-
-Прилагаем список документов, которые можно использовать для проверки происхождения средств.
-
-Вы можете предоставить нам любые документы, такие как: справки о зарплате, налоговые декларации, доходы от бизнеса, продажи имущества и т. д. или любой другой документ, указанный в прилагаемом документе.
-
-Также пожалуйста предоставьте актуальный паспорт или иной документ, удостоверяющий вашу личность.""",
-        "English": """In this regard, we ask you to provide information on the source of funds credited to your trading accounts with RoboForex Ltd.
-
-Attached is a list of documents that can be used to verify the origin of funds.
-
-You can provide us with any documents, such as salary certificates, tax returns, business income, property sales, etc., or any other document specified in the attached document.
-
-Additionally, please provide a valid passport or another identity document."""
-    },
-    "SOF + UB": {
-        "Русский": """В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.
-
-Прилагаем список документов, которые можно использовать для проверки происхождения средств.
-
-Вы можете предоставить нам любые документы, такие как: справки о зарплате, налоговые декларации, доходы от бизнеса, продажи имущества и т. д. или любой другой документ, указанный в прилагаемом документе.
-
-Также пожалуйста предоставьте счет за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.""",
-        "English": """In this regard, we ask you to provide information on the source of funds credited to your trading accounts with RoboForex Ltd.
-
-Attached is a list of documents that can be used to verify the origin of funds.
-
-You can provide us with any documents, such as salary certificates, tax returns, business income, property sales, etc., or any other document specified in the attached document.
-
-Additionally, please provide a utility bill or a bank statement to confirm your residential address."""
-    },
-    "SOF + ID + UB": {
-        "Русский": """В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.
-
-Прилагаем список документов, которые можно использовать для проверки происхождения средств.
-
-Вы можете предоставить нам любые документы, такие как: справки о зарплате, налоговые декларации, доходы от бизнеса, продажи имущества и т. д. или любой другой документ, указанный в прилагаемом документе.
-
-Также пожалуйста предоставьте актуальный паспорт или иной документ, удостоверяющий вашу личность.
-
-Помимо этого пожалуйста предоставьте счет за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.""",
-        "English": """In this regard, we ask you to provide information on the source of funds credited to your trading accounts with RoboForex Ltd.
-
-Attached is a list of documents that can be used to verify the origin of funds.
-
-You can provide us with any documents, such as salary certificates, tax returns, business income, property sales, etc., or any other document specified in the attached document.
-
-Additionally, please provide a valid passport or another identity document.
-
-Moreover, please provide a utility bill or a bank statement to confirm your residential address."""
-    }
+    # Ниже комбинированные варианты больше не нужны, можно оставить или удалить — на логику не влияют
+    "SOF + ID": {"Русский": "", "English": ""},
+    "SOF + UB": {"Русский": "", "English": ""},
+    "SOF + ID + UB": {"Русский": "", "English": ""},
 }
 
-# Выбор запроса
-query = st.selectbox("Выберите шаблон запроса / Select request template:", list(queries.keys()))
+# --- NEW: мультивыбор требуемых пунктов ---
+selected_parts = st.multiselect(
+    "Выберите, что запросить (можно несколько):",
+    options=["SOF", "ID", "UB"],
+    default=["SOF"]
+)
 
 # Выбор языка
 language = st.radio("Выберите язык запроса / Select request language:", list(intro_texts.keys()))
 
 # Кнопка для генерации текста
 if st.button("Сгенерировать текст"):
-    text = f"{intro_texts[language]}\n\n{queries[query][language]}\n\n{closing_texts[language]}"
+    # --- NEW: собираем середину из выбранных блоков ---
+    middle_chunks = [queries[key][language] for key in selected_parts]
+    middle_text = "\n\n".join([c for c in middle_chunks if c.strip()])
+
+    text = f"{intro_texts[language]}\n\n{middle_text}\n\n{closing_texts[language]}"
     st.text_area("Результат:", text, height=300)
     components.html(
         f"""
         <button id="copyButton">Copy text</button>
         <script>
             document.getElementById('copyButton').addEventListener('click', function() {{
-                const text = `{text.replace("\n", "\\n").replace("'", "\\'")}`;
+                const text = `{text.replace("\\\\", "\\\\\\\\").replace("`", "\\`").replace("\\r", "").replace("\\n", "\\n")}`;
                 navigator.clipboard.writeText(text).then(function() {{
                     alert('Текст скопирован в буфер обмена!');
                 }}).catch(function(err) {{
