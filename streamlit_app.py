@@ -75,7 +75,7 @@ blocks = {
 
 # Мультивыбор
 selected_parts = st.multiselect(
-    "Выберите, что запросить (можно несколько):",
+    "Choose your request:",
     options=["SOF", "ID", "UB"],
     default=["SOF"]
 )
@@ -86,7 +86,7 @@ PRIORITY = ["SOF", "ID", "UB"]
 def sort_by_priority(keys):
     return [k for k in PRIORITY if k in keys]
 
-language = st.radio("Выберите язык запроса / Select request language:", list(intro_texts.keys()))
+language = st.radio("Select request language:", list(intro_texts.keys()))
 
 # ----- генерация середины с учётом lead / add / final -----
 def render_middle_adaptive(lang: str, reqs: list) -> str:
@@ -113,11 +113,11 @@ def js_escape(s: str) -> str:
     )
 
 # ----- генерация -----
-if st.button("Сгенерировать текст"):
+if st.button("Generate text"):
     middle_text = render_middle_adaptive(language, selected_parts) if selected_parts else ""
     text = f"{intro_texts[language]}\n\n{middle_text}\n\n{closing_texts[language]}".strip()
 
-    st.text_area("Результат:", text, height=320)
+    st.text_area("Result:", text, height=320)
 
     components.html(
         f"""
