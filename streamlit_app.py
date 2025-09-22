@@ -1,10 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Заголовок страницы
 st.title("Compliance request template")
 
-# Фиксированные части текста на русском и английском
 intro_texts = {
     "Русский": """Добрый день,
 
@@ -27,58 +25,90 @@ If you have any questions, please contact us.
 Best regards,"""
 }
 
-# Блоки середины (оставляем исходные тексты, но будем собирать из отдельных кусков)
-queries = {
+# Адаптивные блоки: lead — для первого пункта, add — для последующих, rest — доп. абзацы
+blocks = {
     "SOF": {
-        "Русский": """В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.
-
-Прилагаем список документов, которые можно использовать для проверки происхождения средств.
-
-Вы можете предоставить нам любые документы, такие как: справки о зарплате, налоговые декларации, доходы от бизнеса, продажи имущества и т. д. или любой другой документ, указанный в прилагаемом документе.""",
-        "English": """In this regard, we ask you to provide information on the source of funds credited to your trading accounts with RoboForex Ltd.
-
-Attached is a list of documents that can be used to verify the origin of funds.
-
-You can provide us with any documents, such as salary certificates, tax returns, business income, property sales, etc., or any other document specified in the attached document."""
+        "Русский": {
+            "lead": "В связи с этим, мы просим вас предоставить информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.",
+            "add":  "Также, пожалуйста, предоставьте информацию об источнике средств, которые были зачислены на ваши торговые счета в RoboForex Ltd.",
+            "rest": "\n\nПрилагаем список документов, которые можно использовать для проверки происхождения средств.\n\nВы можете предоставить нам любые документы, такие как: справки о зарплате, налоговые декларации, доходы от бизнеса, продажи имущества и т. д. или любой другой документ, указанный в прилагаемом документе."
+        },
+        "English": {
+            "lead": "In this regard, we ask you to provide information on the source of funds credited to your trading accounts with RoboForex Ltd.",
+            "add":  "Additionally, please provide information on the source of funds credited to your trading accounts with RoboForex Ltd.",
+            "rest": "\n\nAttached is a list of documents that can be used to verify the origin of funds.\n\nYou can provide us with any documents, such as salary certificates, tax returns, business income, property sales, etc., or any other document specified in the attached document."
+        }
     },
     "ID": {
-        "Русский": """В связи с этим, мы просим вас предоставить актуальный паспорт или иной документ, удостоверяющий вашу личность.""",
-        "English": """In this regard, we ask you to provide a valid passport or another identity document."""
+        "Русский": {
+            "lead": "В связи с этим, мы просим вас предоставить актуальный паспорт или иной документ, удостоверяющий вашу личность.",
+            "add":  "Также, пожалуйста, предоставьте актуальный паспорт или иной документ, удостоверяющий вашу личность.",
+            "rest": ""
+        },
+        "English": {
+            "lead": "In this regard, we ask you to provide a valid passport or another identity document.",
+            "add":  "Additionally, please provide a valid passport or another identity document.",
+            "rest": ""
+        }
     },
     "UB": {
-        "Русский": """В связи с этим, мы просим вас предоставить счет за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.""",
-        "English": """In this regard, we ask you to provide a utility bill or a bank statement to confirm your residential address."""
-    },
-    # Ниже комбинированные варианты больше не нужны, можно оставить или удалить — на логику не влияют
-    "SOF + ID": {"Русский": "", "English": ""},
-    "SOF + UB": {"Русский": "", "English": ""},
-    "SOF + ID + UB": {"Русский": "", "English": ""},
+        "Русский": {
+            "lead": "В связи с этим, мы просим вас предоставить счёт за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.",
+            "add":  "Также, пожалуйста, предоставьте счёт за коммунальные услуги или банковскую выписку для подтверждения вашего адреса проживания.",
+            "rest": ""
+        },
+        "English": {
+            "lead": "In this regard, we ask you to provide a utility bill or a bank statement to confirm your residential address.",
+            "add":  "Additionally, please provide a utility bill or a bank statement to confirm your residential address.",
+            "rest": ""
+        }
+    }
 }
 
-# --- NEW: мультивыбор требуемых пунктов ---
+# Мультивыбор
 selected_parts = st.multiselect(
     "Выберите, что запросить (можно несколько):",
     options=["SOF", "ID", "UB"],
     default=["SOF"]
 )
 
-# Выбор языка
+# Фиксированный приоритет вывода — независимо от порядка кликов
+PRIORITY = ["SOF", "ID", "UB"]
+
+def sort_by_priority(keys):
+    return [k for k in PRIORITY if k in keys]
+
 language = st.radio("Выберите язык запроса / Select request language:", list(intro_texts.keys()))
 
-# Кнопка для генерации текста
-if st.button("Сгенерировать текст"):
-    # --- NEW: собираем середину из выбранных блоков ---
-    middle_chunks = [queries[key][language] for key in selected_parts]
-    middle_text = "\n\n".join([c for c in middle_chunks if c.strip()])
+def render_middle_adaptive(lang: str, reqs: list) -> str:
+    ordered = sort_by_priority(reqs)  # <-- ключевое изменение
+    parts = []
+    for i, r in enumerate(ordered):
+        seg = blocks[r][lang]
+        first_sentence = seg["lead"] if i == 0 else seg["add"]
+        parts.append((first_sentence + seg.get("rest", "")).strip())
+    return "\n\n".join(parts)
 
-    text = f"{intro_texts[language]}\n\n{middle_text}\n\n{closing_texts[language]}"
-    st.text_area("Результат:", text, height=300)
+def js_escape(s: str) -> str:
+    return (
+        s.replace("\\", "\\\\")
+         .replace("`", "\\`")
+         .replace("\r", "")
+         .replace("\n", "\\n")
+    )
+
+if st.button("Сгенерировать текст"):
+    middle_text = render_middle_adaptive(language, selected_parts) if selected_parts else ""
+    text = f"{intro_texts[language]}\n\n{middle_text}\n\n{closing_texts[language]}".strip()
+
+    st.text_area("Результат:", text, height=320)
+
     components.html(
         f"""
         <button id="copyButton">Copy text</button>
         <script>
             document.getElementById('copyButton').addEventListener('click', function() {{
-                const text = `{text.replace("\\\\", "\\\\\\\\").replace("`", "\\`").replace("\\r", "").replace("\\n", "\\n")}`;
+                const text = `{js_escape(text)}`;
                 navigator.clipboard.writeText(text).then(function() {{
                     alert('Текст скопирован в буфер обмена!');
                 }}).catch(function(err) {{
