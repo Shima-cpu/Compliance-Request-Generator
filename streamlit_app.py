@@ -1,13 +1,14 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
+
 st.set_page_config(
     page_title="Compliance request templates",
     page_icon="📄",
     layout="centered"
 )
 
-st.title("AML request templates")
+st.title("Compliance request templates")
 
 
 # =========================
@@ -17,49 +18,66 @@ st.title("AML request templates")
 def js_escape(s: str) -> str:
     return (
         s.replace("\\", "\\\\")
-         .replace("`", "\\`")
-         .replace("${", "\\${")
-         .replace("\r", "")
-         .replace("\n", "\\n")
+        .replace("`", "\\`")
+        .replace("${", "\\${")
+        .replace("\r", "")
+        .replace("\n", "\\n")
     )
 
 
-def render_copy_button(text: str, button_id: str):
+def render_copy_button(text: str, button_id: str) -> None:
     components.html(
         f"""
-        <button id="{button_id}">Copy text</button>
+        <button id="{button_id}" style="
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #cccccc;
+            cursor: pointer;
+            font-size: 14px;
+        ">
+            Copy text
+        </button>
+
         <script>
-            document.getElementById('{button_id}').addEventListener('click', function() {{
+            document.getElementById("{button_id}").addEventListener("click", function() {{
                 const text = `{js_escape(text)}`;
                 navigator.clipboard.writeText(text).then(function() {{
-                    alert('Text copied to clipboard!');
+                    alert("Text copied to clipboard!");
                 }}).catch(function(err) {{
-                    alert('Error copying text!');
+                    alert("Error copying text!");
                 }});
             }});
         </script>
         """,
-        height=100
+        height=70
     )
 
 
-def build_cards_text(tpd_entries: list[dict]) -> str:
-    cards = [entry["card"] for entry in tpd_entries if entry.get("card")]
+def normalize(value: str) -> str:
+    return value.strip() if value else ""
+
+
+# =========================
+# TPD helpers
+# =========================
+
+def build_cards_text(entries: list[dict]) -> str:
+    cards = [entry["card"] for entry in entries if entry.get("card")]
     return ", ".join(cards) if cards else "(card_number)"
 
 
-def build_owners_text(tpd_entries: list[dict]) -> str:
-    owners = sorted(set(entry["owner"] for entry in tpd_entries if entry.get("owner")))
+def build_owners_text(entries: list[dict]) -> str:
+    owners = sorted(set(entry["owner"] for entry in entries if entry.get("owner")))
     return ", ".join(owners) if owners else "(third_party_name)"
 
 
-def build_tpd_accounts_phrase(tpd_entries: list[dict]) -> str:
-    if not tpd_entries:
+def build_tpd_accounts_phrase(entries: list[dict]) -> str:
+    if not entries:
         return "the payment account (card_number) of (third_party_name)"
 
     grouped = {}
 
-    for entry in tpd_entries:
+    for entry in entries:
         card = entry.get("card") or "(card_number)"
         owner = entry.get("owner") or "(third_party_name)"
 
@@ -74,37 +92,49 @@ def build_tpd_accounts_phrase(tpd_entries: list[dict]) -> str:
         if len(cards) == 1:
             parts.append(f"the payment account {cards[0]} of {owner}")
         else:
-            cards_text = ", ".join(cards)
-            parts.append(f"the payment accounts {cards_text} of {owner}")
-
-    if len(parts) == 1:
-        return parts[0]
+            parts.append(f"the payment accounts {', '.join(cards)} of {owner}")
 
     return "; ".join(parts)
 
 
-def build_tpd_accounts_phrase_without_article(tpd_entries: list[dict]) -> str:
-    phrase = build_tpd_accounts_phrase(tpd_entries)
+def build_tpd_accounts_phrase_without_article(entries: list[dict]) -> str:
+    phrase = build_tpd_accounts_phrase(entries)
 
     if phrase.startswith("the "):
-        phrase = phrase[4:]
+        return phrase[4:]
 
     return phrase
 
 
-def apply_tpd_placeholders(text: str, client_name: str, tpd_entries: list[dict]) -> str:
-    accounts_phrase = build_tpd_accounts_phrase(tpd_entries)
-    accounts_phrase_without_article = build_tpd_accounts_phrase_without_article(tpd_entries)
-    cards_text = build_cards_text(tpd_entries)
-    owners_text = build_owners_text(tpd_entries)
+def apply_tpd_placeholders(text: str, client_name: str, entries: list[dict]) -> str:
+    cards_text = build_cards_text(entries)
+    owners_text = build_owners_text(entries)
+    accounts_phrase = build_tpd_accounts_phrase(entries)
+    accounts_phrase_without_article = build_tpd_accounts_phrase_without_article(entries)
 
     return (
         text.replace("(client_name)", client_name if client_name else "(client_name)")
-            .replace("[tpd_accounts_phrase]", accounts_phrase)
-            .replace("[tpd_accounts_phrase_without_article]", accounts_phrase_without_article)
-            .replace("(card_number)", cards_text)
-            .replace("(third_party_name)", owners_text)
+        .replace("[tpd_accounts_phrase]", accounts_phrase)
+        .replace("[tpd_accounts_phrase_without_article]", accounts_phrase_without_article)
+        .replace("(card_number)", cards_text)
+        .replace("(third_party_name)", owners_text)
     )
+
+
+def get_tpd_missing_fields(client_name: str, entries: list[dict]) -> list[str]:
+    missing = []
+
+    if not client_name:
+        missing.append("client name")
+
+    for i, entry in enumerate(entries):
+        if not entry.get("card"):
+            missing.append(f"card number in Account #{i + 1}")
+
+        if not entry.get("owner"):
+            missing.append(f"third party name in Account #{i + 1}")
+
+    return missing
 
 
 # =========================
@@ -113,9 +143,9 @@ def apply_tpd_placeholders(text: str, client_name: str, tpd_entries: list[dict])
 
 tab_sof_kyc, tab_tpd, tab_light = st.tabs(["SOF/KYC", "TPD", "Light check"])
 
+
 # =========================
 # TAB 1: SOF/KYC
-# Existing template logic
 # =========================
 
 with tab_sof_kyc:
@@ -194,41 +224,44 @@ Best regards,"""
         default=["SOF"]
     )
 
-    language = st.radio("Select request language:", list(intro_texts.keys()))
+    language = st.radio(
+        "Select request language:",
+        list(intro_texts.keys())
+    )
 
-    PRIORITY = ["SOF", "ID", "UB"]
+    priority = ["SOF", "ID", "UB"]
 
-    def sort_by_priority(keys):
-        return [k for k in PRIORITY if k in keys]
+    def sort_by_priority(keys: list[str]) -> list[str]:
+        return [key for key in priority if key in keys]
 
-    def render_middle_adaptive(lang: str, reqs: list) -> str:
+    def render_middle_adaptive(lang: str, reqs: list[str]) -> str:
         ordered = sort_by_priority(reqs)
         parts = []
 
-        for i, r in enumerate(ordered):
-            seg = blocks[r][lang]
+        for i, request_type in enumerate(ordered):
+            segment = blocks[request_type][lang]
 
             if i == 0:
-                first_sentence = seg["lead"]
+                first_sentence = segment["lead"]
             elif i == 1:
-                first_sentence = seg["add"]
+                first_sentence = segment["add"]
             else:
-                first_sentence = seg["final"]
+                first_sentence = segment["final"]
 
-            parts.append((first_sentence + seg.get("rest", "")).strip())
+            parts.append((first_sentence + segment.get("rest", "")).strip())
 
         return "\n\n".join(parts)
 
     if st.button("Generate text", key="generate_sof_kyc"):
         if not selected_parts:
-            placeholder_text = "Please choose request options"
-            st.text_area("Result:", placeholder_text, height=320, key="sof_kyc_empty_result")
+            st.warning("Please choose request options.")
+            text = "Please choose request options"
         else:
             middle_text = render_middle_adaptive(language, selected_parts)
             text = f"{intro_texts[language]}\n\n{middle_text}\n\n{closing_texts[language]}".strip()
 
-            st.text_area("Result:", text, height=320, key="sof_kyc_result")
-            render_copy_button(text, "copyButtonSofKyc")
+        st.text_area("Result:", text, height=330, key="sof_kyc_result")
+        render_copy_button(text, "copyButtonSofKyc")
 
 
 # =========================
@@ -339,10 +372,12 @@ Thank you for your prompt attention to this matter."""
         options=list(tpd_templates.keys())
     )
 
-    client_name = st.text_input(
-        "Client name",
-        placeholder="Example: John Smith",
-        key="tpd_client_name"
+    client_name = normalize(
+        st.text_input(
+            "Client name",
+            placeholder="Example: John Smith",
+            key="tpd_client_name"
+        )
     )
 
     st.markdown("Third-party payment accounts")
@@ -352,7 +387,8 @@ Thank you for your prompt attention to this matter."""
         min_value=1,
         max_value=10,
         value=1,
-        step=1
+        step=1,
+        key="tpd_accounts_count"
     )
 
     tpd_entries = []
@@ -363,55 +399,45 @@ Thank you for your prompt attention to this matter."""
         col1, col2 = st.columns(2)
 
         with col1:
-            card = st.text_input(
-                "Card / payment account",
-                key=f"tpd_card_{i}",
-                placeholder="Example: 444111******1111"
+            card = normalize(
+                st.text_input(
+                    "Card / payment account",
+                    key=f"tpd_card_{i}",
+                    placeholder="Example: 444111******1111"
+                )
             )
 
         with col2:
-            owner = st.text_input(
-                "Third party name",
-                key=f"tpd_owner_{i}",
-                placeholder="Example: Vasya Pupkin"
+            owner = normalize(
+                st.text_input(
+                    "Third party name",
+                    key=f"tpd_owner_{i}",
+                    placeholder="Example: Vasya Pupkin"
+                )
             )
 
-        if card or owner:
-            tpd_entries.append({
-                "card": card.strip() if card else "(card_number)",
-                "owner": owner.strip() if owner else "(third_party_name)"
-            })
-
-    if st.button("Generate text", key="generate_tpd"):
-    missing_fields = []
-
-    if not client_name.strip():
-        missing_fields.append("client name")
-
-    for i, entry in enumerate(tpd_entries):
-        if not entry.get("card") or entry.get("card") == "(card_number)":
-            missing_fields.append(f"card number in Account #{i + 1}")
-
-        if not entry.get("owner") or entry.get("owner") == "(third_party_name)":
-            missing_fields.append(f"third party name in Account #{i + 1}")
-
-    if missing_fields:
-        st.warning(
-            "Template is incomplete. Missing: "
-            + ", ".join(missing_fields)
-            + "."
+        tpd_entries.append(
+            {
+                "card": card,
+                "owner": owner
+            }
         )
 
-    raw_text = tpd_templates[selected_tpd_template]
+    if st.button("Generate text", key="generate_tpd"):
+        missing_fields = get_tpd_missing_fields(client_name, tpd_entries)
 
-    final_text = apply_tpd_placeholders(
-        raw_text,
-        client_name,
-        tpd_entries
-    )
+        if missing_fields:
+            st.warning(
+                "Template is incomplete. Missing: "
+                + ", ".join(missing_fields)
+                + "."
+            )
 
-    st.text_area("Result:", final_text, height=560, key="tpd_result")
-    render_copy_button(final_text, "copyButtonTpd")
+        raw_text = tpd_templates[selected_tpd_template]
+        final_text = apply_tpd_placeholders(raw_text, client_name, tpd_entries)
+
+        st.text_area("Result:", final_text, height=560, key="tpd_result")
+        render_copy_button(final_text, "copyButtonTpd")
 
 
 # =========================
@@ -515,5 +541,5 @@ Would you please be so kind and provide us with the requested documents."""
     if st.button("Generate text", key="generate_light"):
         text = light_templates[selected_light_template]
 
-        st.text_area("Result:", text, height=400, key="light_result")
+        st.text_area("Result:", text, height=430, key="light_result")
         render_copy_button(text, "copyButtonLight")
