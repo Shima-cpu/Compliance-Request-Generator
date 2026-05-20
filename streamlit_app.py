@@ -383,16 +383,35 @@ Thank you for your prompt attention to this matter."""
             })
 
     if st.button("Generate text", key="generate_tpd"):
-        raw_text = tpd_templates[selected_tpd_template]
+    missing_fields = []
 
-        final_text = apply_tpd_placeholders(
-            raw_text,
-            client_name,
-            tpd_entries
+    if not client_name.strip():
+        missing_fields.append("client name")
+
+    for i, entry in enumerate(tpd_entries):
+        if not entry.get("card") or entry.get("card") == "(card_number)":
+            missing_fields.append(f"card number in Account #{i + 1}")
+
+        if not entry.get("owner") or entry.get("owner") == "(third_party_name)":
+            missing_fields.append(f"third party name in Account #{i + 1}")
+
+    if missing_fields:
+        st.warning(
+            "Template is incomplete. Missing: "
+            + ", ".join(missing_fields)
+            + "."
         )
 
-        st.text_area("Result:", final_text, height=560, key="tpd_result")
-        render_copy_button(final_text, "copyButtonTpd")
+    raw_text = tpd_templates[selected_tpd_template]
+
+    final_text = apply_tpd_placeholders(
+        raw_text,
+        client_name,
+        tpd_entries
+    )
+
+    st.text_area("Result:", final_text, height=560, key="tpd_result")
+    render_copy_button(final_text, "copyButtonTpd")
 
 
 # =========================
