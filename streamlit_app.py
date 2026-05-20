@@ -43,11 +43,67 @@ def render_copy_button(text: str, button_id: str):
     )
 
 
-def apply_tpd_placeholders(text: str, client_name: str, card_number: str, third_party_name: str) -> str:
+def build_cards_text(tpd_entries: list[dict]) -> str:
+    cards = [entry["card"] for entry in tpd_entries if entry.get("card")]
+    return ", ".join(cards) if cards else "(card_number)"
+
+
+def build_owners_text(tpd_entries: list[dict]) -> str:
+    owners = sorted(set(entry["owner"] for entry in tpd_entries if entry.get("owner")))
+    return ", ".join(owners) if owners else "(third_party_name)"
+
+
+def build_tpd_accounts_phrase(tpd_entries: list[dict]) -> str:
+    if not tpd_entries:
+        return "the payment account (card_number) of (third_party_name)"
+
+    grouped = {}
+
+    for entry in tpd_entries:
+        card = entry.get("card") or "(card_number)"
+        owner = entry.get("owner") or "(third_party_name)"
+
+        if owner not in grouped:
+            grouped[owner] = []
+
+        grouped[owner].append(card)
+
+    parts = []
+
+    for owner, cards in grouped.items():
+        if len(cards) == 1:
+            parts.append(f"the payment account {cards[0]} of {owner}")
+        else:
+            cards_text = ", ".join(cards)
+            parts.append(f"the payment accounts {cards_text} of {owner}")
+
+    if len(parts) == 1:
+        return parts[0]
+
+    return "; ".join(parts)
+
+
+def build_tpd_accounts_phrase_without_article(tpd_entries: list[dict]) -> str:
+    phrase = build_tpd_accounts_phrase(tpd_entries)
+
+    if phrase.startswith("the "):
+        phrase = phrase[4:]
+
+    return phrase
+
+
+def apply_tpd_placeholders(text: str, client_name: str, tpd_entries: list[dict]) -> str:
+    accounts_phrase = build_tpd_accounts_phrase(tpd_entries)
+    accounts_phrase_without_article = build_tpd_accounts_phrase_without_article(tpd_entries)
+    cards_text = build_cards_text(tpd_entries)
+    owners_text = build_owners_text(tpd_entries)
+
     return (
         text.replace("(client_name)", client_name if client_name else "(client_name)")
-            .replace("(card_number)", card_number if card_number else "(card_number)")
-            .replace("(third_party_name)", third_party_name if third_party_name else "(third_party_name)")
+            .replace("[tpd_accounts_phrase]", accounts_phrase)
+            .replace("[tpd_accounts_phrase_without_article]", accounts_phrase_without_article)
+            .replace("(card_number)", cards_text)
+            .replace("(third_party_name)", owners_text)
     )
 
 
@@ -66,7 +122,6 @@ tab_sof_kyc, tab_tpd = st.tabs(["SOF/KYC", "TPD"])
 with tab_sof_kyc:
     st.subheader("SOF/KYC request template")
 
-    # ----- fixed intro and closing texts -----
     intro_texts = {
         "Russian": """Добрый день,
 
@@ -89,7 +144,6 @@ If you have any questions, please contact us.
 Best regards,"""
     }
 
-    # ----- adaptive blocks -----
     blocks = {
         "SOF": {
             "Russian": {
@@ -135,7 +189,6 @@ Best regards,"""
         }
     }
 
-    # ----- UI -----
     selected_parts = st.multiselect(
         "Choose your request:",
         options=["SOF", "ID", "UB"],
@@ -144,13 +197,11 @@ Best regards,"""
 
     language = st.radio("Select request language:", list(intro_texts.keys()))
 
-    # Fixed order: SOF → ID → UB
     PRIORITY = ["SOF", "ID", "UB"]
 
     def sort_by_priority(keys):
         return [k for k in PRIORITY if k in keys]
 
-    # ----- build middle part -----
     def render_middle_adaptive(lang: str, reqs: list) -> str:
         ordered = sort_by_priority(reqs)
         parts = []
@@ -169,7 +220,6 @@ Best regards,"""
 
         return "\n\n".join(parts)
 
-    # ----- generate -----
     if st.button("Generate text", key="generate_sof_kyc"):
         if not selected_parts:
             placeholder_text = "Please choose request options"
@@ -194,11 +244,11 @@ with tab_tpd:
 
 To comply with the Financial Services Commission of Belize and our anti-money laundering obligations, RoboForex Ltd must periodically verify and monitor our clients' personal information.
 
-We have noted that you used the payment account (card_number) of (third_party_name).
+We have noted that you used [tpd_accounts_phrase_without_article].
 Please be aware that using a third party's account for deposits is prohibited under clause 13.3 of the Client Agreement. You can review the full agreement here: https://my.roboforex.com/files/document/client_agreement_bz_en.pdf
 
 What you need to do for future withdrawals:
-1. Initiate your withdrawal using the same payment account (card_number) you used to make your deposit through refund: https://my.roboforex.com/en/operations/withdraw-funds/form/cc-refund-bz/
+1. Initiate your withdrawal using the same payment account(s) (card_number) you used to make your deposit through refund: https://my.roboforex.com/en/operations/withdraw-funds/form/cc-refund-bz/
 2. For any remaining balance, you can withdraw it later on your personal payment account details after the refund is performed in full, and you will be able to use your account in a normal manner.
 
 If third-party details are used again, you risk having access to your Member's Area suspended.
@@ -217,11 +267,11 @@ In this regard, we would like to ask you to provide:
 - Your current ID or passport;
 - Your latest Utility or bank statement (not older than 6 months) to identify your residence.
 
-Furthermore, upon review, we have noted that you used the payment accounts (card_number) of (third_party_name) to deposit fund into your trading account.
+Furthermore, upon review, we have noted that you used [tpd_accounts_phrase_without_article] to deposit funds into your trading account.
 Please be aware that using a third party's account for deposits is prohibited under clause 13.3 of the Client Agreement. You can review the full agreement here: https://my.roboforex.com/files/document/client_agreement_bz_en.pdf
 
 What you need to do for future withdrawals:
-1. Initiate your withdrawal using the same payment account (card_number) you used to make your deposit through refund: https://my.roboforex.com/en/operations/withdraw-funds/form/cc-refund-bz/
+1. Initiate your withdrawal using the same payment account(s) (card_number) you used to make your deposit through refund: https://my.roboforex.com/en/operations/withdraw-funds/form/cc-refund-bz/
 2. For any remaining balance, you can withdraw it later on your personal payment account details after the refund is performed in full, and you will be able to use your account in a normal manner.
 
 If third-party details are used again, you risk having access to your Member's Area suspended.
@@ -234,7 +284,7 @@ If you have any questions, please don't hesitate to reply to this email or conta
 
 To comply with the Financial Services Commission of Belize and our anti-money laundering obligations, RoboForex Ltd must periodically verify and monitor our clients' personal information.
 
-Upon review, we have noted that you used the payment account (card_number) of (third_party_name) to deposit funds into your trading account.
+Upon review, we have noted that you used [tpd_accounts_phrase_without_article] to deposit funds into your trading account.
 Please be aware that using a third party's account for deposits is prohibited under clause 13.3 of the Client Agreement. You can review the full agreement here: https://my.roboforex.com/files/document/client_agreement_bz_en.pdf
 
 In this regard we ask you to provide the following documents:
@@ -244,7 +294,7 @@ In this regard we ask you to provide the following documents:
 - Utility Bill of the third party (third_party_name) or any other reliable document for address confirmation (not older than 6 months);
 - Photo of a Power of attorney where it will be stated that the owner of the funds agreed with the transfer of funds to yours trading account, and he has nothing against it. The example can be found below;
 - Photo next to the third party's face with his ID/passport and Power of Attorney in his hands. The photo must be clearly seen;
-- Photos of the bank card (card_number) with the first six and last four digits visible. The photos must also show the card owner's name. CVV code must be hidden.
+- Photos of the bank card(s) (card_number) with the first six and last four digits visible. The photos must also show the card owner's name. CVV code must be hidden.
 
 I, the sender of the funds________________________ (Name, Surname), ID/Passport Number ____________________ agreed to transfer the amount of funds from my personal payment details with the number: __________________________________________ to my ______________________________(relation who is the owner of members area to third party), __________________________________(Name, Surname), the receiver, on his/her trading account(s): _______________________________________ on RoboForex Ltd. Company. I authorize the receiver to use the deposited funds, by his/her own will, on his/her trading account(s). The receiver can perform any trading, transfer, withdrawal of funds with the deposited amount without any restrictions from my side. I do not have any intent in using or returning the deposited funds. Also, I do understand that the company does not compensate for losses incurred due to the forced closing of positions on the client’s account. I agree with all internal policies of receiver RoboForex Ltd. company, and I do not have any claims concerning the rules of removal of funds. RoboForex Ltd cannot under any circumstances be held liable for any conditions coming from my consent to trust the funds to the receiver.
 
@@ -260,7 +310,7 @@ Thank you for your prompt attention to this matter.""",
 
 To comply with the Financial Services Commission of Belize and our anti-money laundering obligations, RoboForex Ltd must periodically verify and monitor our clients' personal information.
 
-Upon review, we have noted that you used the payment account (card_number) of (third_party_name) to deposit funds into your trading account.
+Upon review, we have noted that you used [tpd_accounts_phrase_without_article] to deposit funds into your trading account.
 Please be aware that using a third party's account for deposits is prohibited under clause 13.3 of the Client Agreement. You can review the full agreement here: https://my.roboforex.com/files/document/client_agreement_bz_en.pdf
 
 In this regard we ask you to provide the following documents:
@@ -272,7 +322,7 @@ In this regard we ask you to provide the following documents:
 - Utility Bill of the third party (third_party_name) or any other reliable document for address confirmation (not older than 6 months);
 - Photo of a Power of attorney where it will be stated that the owner of the funds agreed with the transfer of funds to yours trading account, and he has nothing against it. The example can be found below;
 - Photo next to the third party's face with his ID/passport and Power of Attorney in his hands. The photo must be clearly seen;
-- Photos of the bank card (card_number) with the first six and last four digits visible. The photos must also show the card owner's name. CVV code must be hidden.
+- Photos of the bank card(s) (card_number) with the first six and last four digits visible. The photos must also show the card owner's name. CVV code must be hidden.
 
 I, the sender of the funds________________________ (Name, Surname), ID/Passport Number ____________________ agreed to transfer the amount of funds from my personal payment details with the number: __________________________________________ to my ______________________________(relation who is the owner of members area to third party), __________________________________(Name, Surname), the receiver, on his/her trading account(s): _______________________________________ on RoboForex Ltd. Company. I authorize the receiver to use the deposited funds, by his/her own will, on his/her trading account(s). The receiver can perform any trading, transfer, withdrawal of funds with the deposited amount without any restrictions from my side. I do not have any intent in using or returning the deposited funds. Also, I do understand that the company does not compensate for losses incurred due to the forced closing of positions on the client’s account. I agree with all internal policies of receiver RoboForex Ltd. company, and I do not have any claims concerning the rules of removal of funds. RoboForex Ltd cannot under any circumstances be held liable for any conditions coming from my consent to trust the funds to the receiver.
 
@@ -290,19 +340,57 @@ Thank you for your prompt attention to this matter."""
         options=list(tpd_templates.keys())
     )
 
-    with st.expander("Optional placeholders"):
-        client_name = st.text_input("Client name", placeholder="Example: John Smith")
-        card_number = st.text_input("Card number / payment account", placeholder="Example: 411111******1111")
-        third_party_name = st.text_input("Third party name", placeholder="Example: Jane Smith")
+    client_name = st.text_input(
+        "Client name",
+        placeholder="Example: John Smith",
+        key="tpd_client_name"
+    )
+
+    st.markdown("Third-party payment accounts")
+
+    tpd_count = st.number_input(
+        "How many third-party payment accounts?",
+        min_value=1,
+        max_value=10,
+        value=1,
+        step=1
+    )
+
+    tpd_entries = []
+
+    for i in range(tpd_count):
+        st.markdown(f"Account #{i + 1}")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            card = st.text_input(
+                "Card / payment account",
+                key=f"tpd_card_{i}",
+                placeholder="Example: 444111******1111"
+            )
+
+        with col2:
+            owner = st.text_input(
+                "Third party name",
+                key=f"tpd_owner_{i}",
+                placeholder="Example: Vasya Pupkin"
+            )
+
+        if card or owner:
+            tpd_entries.append({
+                "card": card.strip() if card else "(card_number)",
+                "owner": owner.strip() if owner else "(third_party_name)"
+            })
 
     if st.button("Generate text", key="generate_tpd"):
         raw_text = tpd_templates[selected_tpd_template]
+
         final_text = apply_tpd_placeholders(
             raw_text,
             client_name,
-            card_number,
-            third_party_name
+            tpd_entries
         )
 
-        st.text_area("Result:", final_text, height=520, key="tpd_result")
+        st.text_area("Result:", final_text, height=560, key="tpd_result")
         render_copy_button(final_text, "copyButtonTpd")
