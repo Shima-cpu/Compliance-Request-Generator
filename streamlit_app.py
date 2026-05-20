@@ -3,12 +3,12 @@ import streamlit.components.v1 as components
 
 
 st.set_page_config(
-    page_title="Compliance request templates",
+    page_title="AML request templates",
     page_icon="📄",
     layout="centered"
 )
 
-st.title("Compliance request templates")
+st.title("AML request templates")
 
 
 # =========================
