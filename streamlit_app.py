@@ -121,8 +121,25 @@ def apply_tpd_placeholders(text: str, client_name: str, entries: list[dict]) -> 
     )
 
 
-def get_tpd_missing_fields(client_name: str, entries: list[dict]) -> list[str]:
+def get_tpd_missing_fields(template_key: str, client_name: str, entries: list[dict]) -> list[str]:
     missing = []
+
+    templates_without_required_fields = [
+        "Docs NOT provided - closing ticket"
+    ]
+
+    templates_card_only = [
+        "Docs provided - closing ticket"
+    ]
+
+    if template_key in templates_without_required_fields:
+        return missing
+
+    if template_key in templates_card_only:
+        for i, entry in enumerate(entries):
+            if not entry.get("card"):
+                missing.append(f"card number in Account #{i + 1}")
+        return missing
 
     if not client_name:
         missing.append("client name")
@@ -364,7 +381,23 @@ Signature: __________________________________________
 
 Additional information and/or documents may be requested upon review of the submitted documents.
 
-Thank you for your prompt attention to this matter."""
+Thank you for your prompt attention to this matter.""",
+
+        "Docs NOT provided - closing ticket": """Dear Client,
+
+We haven’t received a response from you, and we are proceeding with the closure of this ticket. Please note that the issue remains unresolved, and the requested documents and/or information are still outstanding.
+
+Until this is completed, withdrawal limitations may apply. To avoid any delays in processing your withdrawals, we kindly recommend you to provide the required information as soon as possible.""",
+
+        "Docs provided - closing ticket": """Hello,
+
+Thank you very much for providing the requested documents.
+
+We confirm that all documents have been successfully received and reviewed. Please initiate a refund to the card (card_number) via the following link: https://my.roboforex.com/en/operations/withdraw-funds/form/cc-refund-bz/
+
+After the refund is completed in full you will be able to use your own cards without any resctrictions.
+
+If you have any further questions or need assistance, please feel free to contact us."""
     }
 
     selected_tpd_template = st.selectbox(
@@ -372,59 +405,92 @@ Thank you for your prompt attention to this matter."""
         options=list(tpd_templates.keys())
     )
 
-    client_name = normalize(
-        st.text_input(
-            "Client name",
-            placeholder="Example: John Smith",
-            key="tpd_client_name"
+    requires_no_fields = selected_tpd_template in [
+        "Docs NOT provided - closing ticket"
+    ]
+
+    requires_card_only = selected_tpd_template in [
+        "Docs provided - closing ticket"
+    ]
+
+    client_name = ""
+
+    if not requires_no_fields and not requires_card_only:
+        client_name = normalize(
+            st.text_input(
+                "Client name",
+                placeholder="Example: John Smith",
+                key="tpd_client_name"
+            )
         )
-    )
-
-    st.markdown("Third-party payment accounts")
-
-    tpd_count = st.number_input(
-        "How many third-party payment accounts?",
-        min_value=1,
-        max_value=10,
-        value=1,
-        step=1,
-        key="tpd_accounts_count"
-    )
 
     tpd_entries = []
 
-    for i in range(tpd_count):
-        st.markdown(f"Account #{i + 1}")
+    if not requires_no_fields:
+        st.markdown("Third-party payment accounts")
 
-        col1, col2 = st.columns(2)
-
-        with col1:
-            card = normalize(
-                st.text_input(
-                    "Card / payment account",
-                    key=f"tpd_card_{i}",
-                    placeholder="Example: 444111******1111"
-                )
-            )
-
-        with col2:
-            owner = normalize(
-                st.text_input(
-                    "Third party name",
-                    key=f"tpd_owner_{i}",
-                    placeholder="Example: Vasya Pupkin"
-                )
-            )
-
-        tpd_entries.append(
-            {
-                "card": card,
-                "owner": owner
-            }
+        tpd_count = st.number_input(
+            "How many payment accounts?",
+            min_value=1,
+            max_value=10,
+            value=1,
+            step=1,
+            key="tpd_accounts_count"
         )
 
+        for i in range(tpd_count):
+            st.markdown(f"Account #{i + 1}")
+
+            if requires_card_only:
+                card = normalize(
+                    st.text_input(
+                        "Card / payment account",
+                        key=f"tpd_card_{i}",
+                        placeholder="Example: 444111******1111"
+                    )
+                )
+
+                tpd_entries.append(
+                    {
+                        "card": card,
+                        "owner": ""
+                    }
+                )
+
+            else:
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    card = normalize(
+                        st.text_input(
+                            "Card / payment account",
+                            key=f"tpd_card_{i}",
+                            placeholder="Example: 444111******1111"
+                        )
+                    )
+
+                with col2:
+                    owner = normalize(
+                        st.text_input(
+                            "Third party name",
+                            key=f"tpd_owner_{i}",
+                            placeholder="Example: Vasya Pupkin"
+                        )
+                    )
+
+                tpd_entries.append(
+                    {
+                        "card": card,
+                        "owner": owner
+                    }
+                )
+
     if st.button("Generate text", key="generate_tpd"):
-        missing_fields = get_tpd_missing_fields(client_name, tpd_entries)
+        missing_fields = get_tpd_missing_fields(
+            selected_tpd_template,
+            client_name,
+            tpd_entries
+        )
 
         if missing_fields:
             st.warning(
