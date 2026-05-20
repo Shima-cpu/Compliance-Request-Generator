@@ -7,7 +7,7 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("Compliance request templates")
+st.title("AML request templates")
 
 
 # =========================
