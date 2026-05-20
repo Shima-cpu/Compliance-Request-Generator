@@ -111,8 +111,7 @@ def apply_tpd_placeholders(text: str, client_name: str, tpd_entries: list[dict])
 # Tabs
 # =========================
 
-tab_sof_kyc, tab_tpd = st.tabs(["SOF/KYC", "TPD"])
-
+tab_sof_kyc, tab_tpd, tab_light = st.tabs(["SOF/KYC", "TPD", "Light check"])
 
 # =========================
 # TAB 1: SOF/KYC
@@ -394,3 +393,108 @@ Thank you for your prompt attention to this matter."""
 
         st.text_area("Result:", final_text, height=560, key="tpd_result")
         render_copy_button(final_text, "copyButtonTpd")
+
+
+# =========================
+# TAB 3: LIGHT CHECK
+# =========================
+
+with tab_light:
+    st.subheader("Light check templates")
+
+    light_templates = {
+        "Initial request": """Hello,
+
+According to clauses 4.4, 4.6, 4.9 and 13.18 of the Client Agreement, please provide a selfie with the ID you used for verification in your hands next to a computer/laptop with your RoboForex Member's area opened on it.""",
+
+        "WD OK": """Hello,
+
+Thank you for providing the requested documents.
+
+Please withdraw all of your funds by performing a withdrawal request.
+
+We kindly appreciate your cooperation.""",
+
+        "LOW quality statements": """Hello,
+
+Please note that the quality of your bank statements is poor. Please provide statements of better quality and highlight the salary transactions.
+
+We kindly appreciate your cooperation.""",
+
+        "UB": """Hello,
+
+Please provide a recent utility bill confirming your residential address.""",
+
+        "Under review": """Hello,
+
+Please note that your documents are under review. Kindly wait for updates.
+
+We kindly appreciate your cooperation.""",
+
+        "LOW quality ID": """Hello,
+
+Please note that all data of your ID and Member area should be clearly visible. Kindly provide a photo of a better quality.""",
+
+        "Selfie with PoA with current date": """Hello,
+
+Please take a selfie with a bank statement in one hand and a piece of paper with the current date in the other hand.
+
+We kindly appreciate your cooperation.""",
+
+        "Bank card verif.": """Please pass bank card verification used for deposit ******. Please provide photos of both sides of bank card.
+
+Please sign the Card, Hide the CVC/CVV code. You need to hide all card numbers except the expiry date, the first 6 and last 4 numbers of the card.
+
+If the bank cards are unnamed, please provide us with a screenshot from your internet banking from where we will be able to see your name, surname, bank card number""",
+
+        "Still under review": """Dear ****,
+
+We sincerely thank you for your patience.
+
+Kindly be informed that your case is still under review.
+
+We do our best to speed up the process and provide the best service to each client.
+
+Please also note that we will try to resolve your issue as a higher priority as soon as possible.
+
+We kindly appreciate your cooperation.""",
+
+        "Ignoring. Ticket closure": """Dear Client
+
+We hope you’re well.
+
+As we have not received a response to our recent request for documentation, we will proceed to close this ticket for now.
+Please note that we still require the requested documents to continue with your case. You may reply to this email at any time with the documents, and we will reopen the ticket immediately.
+
+Thank you for your cooperation and understanding.
+
+Should you have any questions, feel free to reply to this email or contact our support team—we’re here to help.
+
+This ticket will now be closed.""",
+
+        "Reply to toxic client": """Hello,
+
+Please note that in accordance with the Client Agreement, clause 5.2 - The term for consideration of the Client's request is five working days. In some cases, the review period may be extended.
+
+Kindly note that we have to follow our internal procedures to provide best service to our clients.
+
+Please take note that your personal data are kept safe within the company in accordance with our privacy policy, GDPR, and AML Law requirements. Document(s) will be used in order to have your personal data updated in accordance to the AML Law requirements.
+
+Please find more details by following links:
+
+- https://roboforex.com/about/company/documents/
+- https://roboforex.com/about/client/security-policy/
+
+Would you please be so kind and provide us with the requested documents."""
+    }
+
+    selected_light_template = st.selectbox(
+        "Choose template:",
+        options=list(light_templates.keys())
+    )
+
+    if st.button("Generate text", key="generate_light"):
+        text = light_templates[selected_light_template]
+
+        st.text_area("Result:", text, height=400, key="light_result")
+        render_copy_button(text, "copyButtonLight")
