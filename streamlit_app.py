@@ -3,12 +3,12 @@ import streamlit.components.v1 as components
 
 
 st.set_page_config(
-    page_title="AML request templates",
+    page_title="Compliance request templates",
     page_icon="📄",
     layout="centered"
 )
 
-st.title("AML request templates")
+st.title("Compliance request templates")
 
 
 # =========================
@@ -132,6 +132,10 @@ def get_tpd_missing_fields(template_key: str, client_name: str, entries: list[di
         "Docs provided - closing ticket"
     ]
 
+    templates_client_only = [
+        "TPD APS docs request"
+    ]
+
     if template_key in templates_without_required_fields:
         return missing
 
@@ -139,6 +143,11 @@ def get_tpd_missing_fields(template_key: str, client_name: str, entries: list[di
         for i, entry in enumerate(entries):
             if not entry.get("card"):
                 missing.append(f"card number in Account #{i + 1}")
+        return missing
+
+    if template_key in templates_client_only:
+        if not client_name:
+            missing.append("client name")
         return missing
 
     if not client_name:
@@ -155,10 +164,35 @@ def get_tpd_missing_fields(template_key: str, client_name: str, entries: list[di
 
 
 # =========================
+# Antifraud helpers
+# =========================
+
+def apply_antifraud_placeholders(text: str, verification_link: str, client_name: str) -> str:
+    return (
+        text.replace("[Verification Link]", verification_link if verification_link else "[Verification Link]")
+        .replace("[Client's Name]", client_name if client_name else "[Client's Name]")
+    )
+
+
+def get_antifraud_missing_fields(template_key: str, verification_link: str, client_name: str) -> list[str]:
+    missing = []
+
+    if template_key == "Liveness request" and not verification_link:
+        missing.append("verification link")
+
+    if template_key == "CR severe deposit/withdrawal" and not client_name:
+        missing.append("client name")
+
+    return missing
+
+
+# =========================
 # Tabs
 # =========================
 
-tab_sof_kyc, tab_tpd, tab_light = st.tabs(["SOF/KYC", "TPD", "Light check"])
+tab_sof_kyc, tab_tpd, tab_light, tab_antifraud = st.tabs(
+    ["SOF/KYC", "TPD", "Light check", "Antifraud"]
+)
 
 
 # =========================
@@ -383,6 +417,41 @@ Additional information and/or documents may be requested upon review of the subm
 
 Thank you for your prompt attention to this matter.""",
 
+        "TPD APS docs request": """Dear (client_name),
+
+We hope this message finds you well.
+
+We are contacting you regarding deposits made to your RoboForex trading account via Binance Pay. Our records indicate that the funds originated from a wallet not registered in your name.
+
+In accordance with Clause 13.3 of the RoboForex Ltd Client Agreement and our internal Anti-Money Laundering (AML) policies, we are required to verify the source and legitimacy of all third-party transactions. To assess this transfer, we kindly ask that you explain the reason for the deposits and identify the individual who initiated them.
+
+To proceed, please provide the following documents:
+
+1) Proof of relationship with the third-party wallet owner (e.g., marriage certificate, birth certificate), if applicable.
+2) A Power of Attorney from the wallet owner stating they authorized and initiated the transfer, and fully consent to your use of the funds. (See the Power of Attorney template below.)
+3) A clear photo of a valid government-issued ID (passport, national ID, etc.) belonging to the wallet owner.
+4) A recent utility bill or bank statement (dated within the last 6 months) showing the wallet owner's name and current residential address.
+5) A selfie of the wallet owner holding the signed Power of Attorney next to their face (for identity verification).
+6) A screenshot of the Binance Pay statement’s first page (from the account used for deposit), clearly showing the ownership (name, surname, Binance ID) of the account details, also a screenshot of at least 1 transaction, the date, amount deposited to the trading account (you can find the guide in the attachment).
+
+Power of Attorney Template:
+
+I, [Full Name of Wallet Owner], holder of [ID Type: Passport/National ID], ID number: [ID Number], residing at [Full Residential Address], hereby declare the following:
+I am the lawful owner of the Binance Pay wallet from which funds were transferred to the RoboForex trading account registered under the name [Account Holder’s Full Name].
+I confirm that I personally authorized and initiated the transfer of these funds and that I have no objection to their use by the account holder for trading or any other lawful activity within their RoboForex account.
+Furthermore, I acknowledge that I have no claim, entitlement, or condition regarding the use, management, or withdrawal of these funds. I fully and irrevocably waive any right to contest or dispute the transaction.
+This Power of Attorney is granted voluntarily, without coercion or undue influence. It is valid indefinitely unless revoked by me in writing.
+
+Signed:
+
+[Full Name of Wallet Owner]
+Date: [DD/MM/YYYY]
+
+Your cooperation is greatly appreciated.
+
+Regards,
+Your RoboForex""",
+
         "Docs NOT provided - closing ticket": """Dear Client,
 
 We haven’t received a response from you, and we are proceeding with the closure of this ticket. Please note that the issue remains unresolved, and the requested documents and/or information are still outstanding.
@@ -413,6 +482,10 @@ If you have any further questions or need assistance, please feel free to contac
         "Docs provided - closing ticket"
     ]
 
+    requires_client_only = selected_tpd_template in [
+        "TPD APS docs request"
+    ]
+
     client_name = ""
 
     if not requires_no_fields and not requires_card_only:
@@ -426,7 +499,7 @@ If you have any further questions or need assistance, please feel free to contac
 
     tpd_entries = []
 
-    if not requires_no_fields:
+    if not requires_no_fields and not requires_client_only:
         st.markdown("Third-party payment accounts")
 
         tpd_count = st.number_input(
@@ -609,3 +682,136 @@ Would you please be so kind and provide us with the requested documents."""
 
         st.text_area("Result:", text, height=430, key="light_result")
         render_copy_button(text, "copyButtonLight")
+
+
+# =========================
+# TAB 4: ANTIFRAUD
+# =========================
+
+with tab_antifraud:
+    st.subheader("Antifraud templates")
+
+    antifraud_templates = {
+        "Liveness request": """Dear Trader,
+
+We hope you’re doing well.
+
+As part of our ongoing commitment to maintaining a secure and seamless trading environment, we occasionally ask clients to complete a brief account update. This helps us ensure that your account information remains accurate and that you continue to enjoy uninterrupted access to all services.
+
+Please follow the link below to complete a short verification at your convenience:
+
+[Verification Link]
+
+The process should only take a few minutes. If you have any questions or need assistance, our team will be happy to help.
+
+Thank you for your cooperation and for trading with us.""",
+
+        "WB fraud (deposit withdrawn)": """Dear Client,
+
+Following a review of your account activity, the Company has identified violations of the Client Agreement, including misuse of the bonus program and issues related to the verification process.
+
+In accordance with Clauses 4.8 and 4.15 of the Client Agreement, the Company has decided to terminate the Agreement with immediate effect and permanently close your account.
+
+Please note that your deposited funds were previously withdrawn in full. The remaining balance has been cancelled and is not eligible for withdrawal.
+
+This decision is final.""",
+
+        "WB fraud (plain termination, no deposit)": """Dear Client,
+
+Following a review of your account activity, the Company has identified violations of the Client Agreement.
+
+In accordance with Clauses 4.8 and 4.15 of the Client Agreement, the Company has decided to terminate the Agreement with immediate effect and permanently close your account.
+
+This decision is final.""",
+
+        "Card/bank verification": """Dear Trader,
+
+We kindly ask you to provide a bank statement related to the card you used to make deposits to your trading account.
+
+Please ensure that the document meets the following requirements:
+
+- Issued by your bank (PDF or printed copy);
+- Clearly shows your full name;
+- Displays the bank’s name and address;
+- Contains details of the card used for the deposit (e.g. last 4 digits or transaction reference);
+- Shows the relevant transaction(s) to our company, if possible;
+- Is recent (typically within the last 3 months);
+
+Please note that the statement must correspond specifically to the card used for funding your account, as this is required for verification and compliance purposes.
+
+You may upload the document via your client portal or reply to this email with the attachment.
+
+If you have any questions or need assistance, please feel free to contact us.
+
+Kind regards,""",
+
+        "CR severe deposit/withdrawal": """Dear [Client's Name],
+
+As part of our ongoing compliance procedures in accordance with international Anti-Money Laundering (AML) standards and our internal policies, we conduct regular reviews of incoming transactions.
+
+We have identified that recent transactions at your account were processed through third-party exchange services categorized as high-risk by industry-standard risk databases and monitoring tools.
+
+In light of this, we kindly request that you provide:
+
+- A brief explanation of the purpose and necessity of using these particular exchange platforms, specifically of wallet;
+- Any supporting documents, such as transaction confirmations, screenshots, sender details, or payment receipts;
+
+Please note that if a transaction is identified as high-risk, we may temporarily suspend processing until the origin and purpose of the funds are verified. Repeated use of high-risk third-party services or failure to provide adequate clarification may result in the termination of your account, in accordance with our AML obligations and the Client Agreement.
+
+Please confirm this wallet or exchange will not be used for your further deposits or withdrawals.
+
+We strongly recommend using regulated exchanges only.
+
+We appreciate your prompt attention to this matter and your continued cooperation."""
+    }
+
+    selected_antifraud_template = st.selectbox(
+        "Choose Antifraud template:",
+        options=list(antifraud_templates.keys())
+    )
+
+    verification_link = ""
+    antifraud_client_name = ""
+
+    if selected_antifraud_template == "Liveness request":
+        verification_link = normalize(
+            st.text_input(
+                "Verification link",
+                placeholder="Paste verification link here",
+                key="antifraud_verification_link"
+            )
+        )
+
+    if selected_antifraud_template == "CR severe deposit/withdrawal":
+        antifraud_client_name = normalize(
+            st.text_input(
+                "Client name",
+                placeholder="Example: John Smith",
+                key="antifraud_client_name"
+            )
+        )
+
+    if st.button("Generate text", key="generate_antifraud"):
+        missing_fields = get_antifraud_missing_fields(
+            selected_antifraud_template,
+            verification_link,
+            antifraud_client_name
+        )
+
+        if missing_fields:
+            st.warning(
+                "Template is incomplete. Missing: "
+                + ", ".join(missing_fields)
+                + "."
+            )
+
+        raw_text = antifraud_templates[selected_antifraud_template]
+        text = apply_antifraud_placeholders(
+            raw_text,
+            verification_link,
+            antifraud_client_name
+        )
+
+        st.text_area("Result:", text, height=480, key="antifraud_result")
+        render_copy_button(text, "copyButtonAntifraud")
+        
