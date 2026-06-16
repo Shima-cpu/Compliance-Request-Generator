@@ -464,7 +464,7 @@ Thank you very much for providing the requested documents.
 
 We confirm that all documents have been successfully received and reviewed. Please initiate a refund to the card (card_number) via the following link: https://my.roboforex.com/en/operations/withdraw-funds/form/cc-refund-bz/
 
-After the refund is completed in full you will be able to use your own cards without any resctrictions.
+After the refund is completed in full you will be able to use your own cards without any restrictions.
 
 If you have any further questions or need assistance, please feel free to contact us."""
     }
