@@ -587,9 +587,13 @@ with tab_light:
     st.subheader("Light check templates")
 
     light_templates = {
-        "Initial request": """Hello,
-
-According to clauses 4.4, 4.6, 4.9 and 13.18 of the Client Agreement, please provide a selfie with the ID you used for verification in your hands next to a computer/laptop with your RoboForex Member's area opened on it.""",
+        "Initial request": """Hello, 
+ 
+Kindly note, that in accordance with the c. 4.4, 4.6, 4.9, and 13.18 of the Client Agreement we ask you to provide us with a selfie with your ID in your hands next to the computer/laptop with an open RoboForex Members area. 
+ 
+Please provide a good quality photo taken from a short distance in good lighting. All ID data must be clearly visible, while it is also clearly visible that it is the passport holder who holds the document in his hands. 
+ 
+Please upload the requested data as a reply to this ticket/email. To help us review your request as quickly as possible, we kindly ask you to continue our communication in this ticket and avoid submitting the requested information in a separate tickets or to other departments.""",
 
         "WD OK": """Hello,
 
