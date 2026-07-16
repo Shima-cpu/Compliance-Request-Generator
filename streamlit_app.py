@@ -214,14 +214,10 @@ in accordance with the requirements of the FSC Belize regulator and anti-money l
     closing_texts = {
         "Russian": """Мы ценим ваше сотрудничество.
 
-Если у вас есть какие-либо вопросы, пожалуйста, свяжитесь с нами.
-
-С уважением,""",
+Если у вас есть какие-либо вопросы, пожалуйста, свяжитесь с нами.""",
         "English": """We appreciate your cooperation.
 
-If you have any questions, please contact us.
-
-Best regards,"""
+If you have any questions, please contact us."""
     }
 
     blocks = {
@@ -375,9 +371,11 @@ In this regard we ask you to provide the following documents:
 - Explanation of why the third-party deposit was used;
 - ID/Passport of the Third Party - (third_party_name);
 - Utility Bill of the third party (third_party_name) or any other reliable document for address confirmation (not older than 6 months);
-- Photo of a Power of attorney where it will be stated that the owner of the funds agreed with the transfer of funds to yours trading account, and he has nothing against it. The example can be found below;
-- Photo next to the third party's face with his ID/passport and Power of Attorney in his hands. The photo must be clearly seen;
+- A signed Letter of Consent confirming that the owner of the funds authorized the transfer to your trading account and consents to your use of the funds. The template can be found below;
+- A clear selfie of the third party holding their ID/passport and the signed Letter of Consent next to their face;
 - Photos of the bank card(s) (card_number) with the first six and last four digits visible. The photos must also show the card owner's name. CVV code must be hidden.
+
+Letter of Consent Template:
 
 I, the sender of the funds________________________ (Name, Surname), ID/Passport Number ____________________ agreed to transfer the amount of funds from my personal payment details with the number: __________________________________________ to my ______________________________(relation who is the owner of members area to third party), __________________________________(Name, Surname), the receiver, on his/her trading account(s): _______________________________________ on RoboForex Ltd. Company. I authorize the receiver to use the deposited funds, by his/her own will, on his/her trading account(s). The receiver can perform any trading, transfer, withdrawal of funds with the deposited amount without any restrictions from my side. I do not have any intent in using or returning the deposited funds. Also, I do understand that the company does not compensate for losses incurred due to the forced closing of positions on the client’s account. I agree with all internal policies of receiver RoboForex Ltd. company, and I do not have any claims concerning the rules of removal of funds. RoboForex Ltd cannot under any circumstances be held liable for any conditions coming from my consent to trust the funds to the receiver.
 
@@ -403,9 +401,11 @@ In this regard we ask you to provide the following documents:
 - Explanation of why the third-party deposit was used;
 - ID/Passport of the Third Party - (third_party_name);
 - Utility Bill of the third party (third_party_name) or any other reliable document for address confirmation (not older than 6 months);
-- Photo of a Power of attorney where it will be stated that the owner of the funds agreed with the transfer of funds to yours trading account, and he has nothing against it. The example can be found below;
-- Photo next to the third party's face with his ID/passport and Power of Attorney in his hands. The photo must be clearly seen;
+- A signed Letter of Consent confirming that the owner of the funds authorized the transfer to your trading account and consents to your use of the funds. The template can be found below;
+- A clear selfie of the third party holding their ID/passport and the signed Letter of Consent next to their face;
 - Photos of the bank card(s) (card_number) with the first six and last four digits visible. The photos must also show the card owner's name. CVV code must be hidden.
+
+Letter of Consent Template:
 
 I, the sender of the funds________________________ (Name, Surname), ID/Passport Number ____________________ agreed to transfer the amount of funds from my personal payment details with the number: __________________________________________ to my ______________________________(relation who is the owner of members area to third party), __________________________________(Name, Surname), the receiver, on his/her trading account(s): _______________________________________ on RoboForex Ltd. Company. I authorize the receiver to use the deposited funds, by his/her own will, on his/her trading account(s). The receiver can perform any trading, transfer, withdrawal of funds with the deposited amount without any restrictions from my side. I do not have any intent in using or returning the deposited funds. Also, I do understand that the company does not compensate for losses incurred due to the forced closing of positions on the client’s account. I agree with all internal policies of receiver RoboForex Ltd. company, and I do not have any claims concerning the rules of removal of funds. RoboForex Ltd cannot under any circumstances be held liable for any conditions coming from my consent to trust the funds to the receiver.
 
@@ -428,29 +428,26 @@ In accordance with Clause 13.3 of the RoboForex Ltd Client Agreement and our int
 To proceed, please provide the following documents:
 
 1) Proof of relationship with the third-party wallet owner (e.g., marriage certificate, birth certificate), if applicable.
-2) A Power of Attorney from the wallet owner stating they authorized and initiated the transfer, and fully consent to your use of the funds. (See the Power of Attorney template below.)
+2) A signed Letter of Consent from the wallet owner stating that they authorized and initiated the transfer and fully consent to your use of the funds. (See the Letter of Consent template below.)
 3) A clear photo of a valid government-issued ID (passport, national ID, etc.) belonging to the wallet owner.
 4) A recent utility bill or bank statement (dated within the last 6 months) showing the wallet owner's name and current residential address.
-5) A selfie of the wallet owner holding the signed Power of Attorney next to their face (for identity verification).
+5) A clear selfie of the wallet owner holding the signed Letter of Consent and their valid ID next to their face (for identity verification).
 6) A screenshot of the Binance Pay statement’s first page (from the account used for deposit), clearly showing the ownership (name, surname, Binance ID) of the account details, also a screenshot of at least 1 transaction, the date, amount deposited to the trading account (you can find the guide in the attachment).
 
-Power of Attorney Template:
+Letter of Consent Template:
 
 I, [Full Name of Wallet Owner], holder of [ID Type: Passport/National ID], ID number: [ID Number], residing at [Full Residential Address], hereby declare the following:
 I am the lawful owner of the Binance Pay wallet from which funds were transferred to the RoboForex trading account registered under the name [Account Holder’s Full Name].
 I confirm that I personally authorized and initiated the transfer of these funds and that I have no objection to their use by the account holder for trading or any other lawful activity within their RoboForex account.
 Furthermore, I acknowledge that I have no claim, entitlement, or condition regarding the use, management, or withdrawal of these funds. I fully and irrevocably waive any right to contest or dispute the transaction.
-This Power of Attorney is granted voluntarily, without coercion or undue influence. It is valid indefinitely unless revoked by me in writing.
+This Letter of Consent is provided voluntarily, without coercion or undue influence.
 
 Signed:
 
 [Full Name of Wallet Owner]
 Date: [DD/MM/YYYY]
 
-Your cooperation is greatly appreciated.
-
-Regards,
-Your RoboForex""",
+Your cooperation is greatly appreciated.""",
 
         "Docs NOT provided - closing ticket": """Dear Client,
 
@@ -623,9 +620,9 @@ We kindly appreciate your cooperation.""",
 
 Please note that all data of your ID and Member area should be clearly visible. Kindly provide a photo of a better quality.""",
 
-        "Selfie with PoA with current date": """Hello,
+        "Selfie with Letter of Consent with current date": """Hello,
 
-Please take a selfie with a bank statement in one hand and a piece of paper with the current date in the other hand.
+Please take a selfie holding the signed Letter of Consent in one hand and a piece of paper with the current date in the other hand.
 
 We kindly appreciate your cooperation.""",
 
@@ -745,9 +742,7 @@ Please note that the statement must correspond specifically to the card used for
 
 You may upload the document via your client portal or reply to this email with the attachment.
 
-If you have any questions or need assistance, please feel free to contact us.
-
-Kind regards,""",
+If you have any questions or need assistance, please feel free to contact us.""",
 
         "CR severe deposit/withdrawal": """Dear [Client's Name],
 
