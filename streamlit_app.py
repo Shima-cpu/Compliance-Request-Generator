@@ -449,6 +449,24 @@ Date: [DD/MM/YYYY]
 
 Your cooperation is greatly appreciated.""",
 
+        "TPD Corporate card": """Dear (client_name),
+
+To comply with the Financial Services Commission of Belize and our anti-money laundering obligations, RoboForex Ltd must periodically verify and monitor our clients' payment details.
+
+We have noted that you used payment card (card_number) in the name of (third_party_name).
+Please be aware that using a third party's account for deposits is prohibited under clause 13.3 of the Client Agreement. You can review the full agreement here:
+https://my.roboforex.com/files/document/client_agreement_bz_en.pdf
+
+To proceed with the verification, kindly clarify whether this payment was made using the company's corporate bank card. If so, please provide clear photos of both the front and back of the card used for the transaction.
+
+Please ensure that the images clearly show the first six and last four digits of the card number, the expiry date, and the cardholder's name, while the remaining card digits and the CVV/CVC code are masked for security purposes.
+
+If the card used is not a corporate card issued to the company, please let us know so that we can advise you on the next steps.
+
+Thank you for your prompt attention to this matter.
+
+If you have any questions, please do not hesitate to reply to this email.""",
+
         "Docs NOT provided - closing ticket": """Dear Client,
 
 We haven’t received a response from you, and we are proceeding with the closure of this ticket. Please note that the issue remains unresolved, and the requested documents and/or information are still outstanding.
@@ -620,9 +638,9 @@ We kindly appreciate your cooperation.""",
 
 Please note that all data of your ID and Member area should be clearly visible. Kindly provide a photo of a better quality.""",
 
-        "Selfie with Letter of Consent with current date": """Hello,
+        "Selfie with Proof of address with current date": """Hello,
 
-Please take a selfie holding the signed Letter of Consent in one hand and a piece of paper with the current date in the other hand.
+Please take a selfie holding your Proof of Address in one hand and a piece of paper with the current date in the other hand.
 
 We kindly appreciate your cooperation.""",
 
