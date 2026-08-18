@@ -624,9 +624,17 @@ Please note that the quality of your bank statements is poor. Please provide sta
 
 We kindly appreciate your cooperation.""",
 
-        "UB": """Hello,
+        "UB": """Dear Client,
 
-Please provide a recent utility bill confirming your residential address.""",
+Thank you for providing the requested documents.
+
+Please also provide a recent utility bill confirming your current residential address.
+
+Please avoid creating new tickets and keep all communication within the existing open ticket. This will help us process your request as soon as possible.
+
+Please note that creating a new ticket will move your request to the end of the processing queue and may result in further delays.
+
+Thank you for your cooperation.""",
 
         "Under review": """Hello,
 
