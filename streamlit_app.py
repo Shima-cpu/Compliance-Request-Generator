@@ -1069,15 +1069,6 @@ with tab_admin:
                         + ". The template can still be saved, but automatic field replacement may no longer work as expected."
                     )
 
-                st.markdown("Preview")
-                st.text_area(
-                    "Preview text",
-                    value=edited_admin_text,
-                    height=220,
-                    disabled=True,
-                    key=f"admin_preview_{selected_admin_section}_{selected_admin_template}",
-                )
-
                 col_save, col_restore = st.columns(2)
 
                 with col_save:
@@ -1106,4 +1097,3 @@ with tab_admin:
 
         elif entered_password:
             st.error("Incorrect password.")
-
