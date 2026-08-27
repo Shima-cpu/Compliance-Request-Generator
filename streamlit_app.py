@@ -1,5 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import json
+from datetime import datetime, timezone
+from urllib import error, parse, request
 
 
 st.set_page_config(
@@ -55,6 +58,129 @@ def render_copy_button(text: str, button_id: str) -> None:
 
 def normalize(value: str) -> str:
     return value.strip() if value else ""
+
+
+def get_secret(name: str) -> str:
+    try:
+        return str(st.secrets.get(name, "")).strip()
+    except Exception:
+        return ""
+
+
+def supabase_configured() -> bool:
+    return bool(
+        get_secret("SUPABASE_URL")
+        and (get_secret("SUPABASE_SERVICE_ROLE_KEY") or get_secret("SUPABASE_KEY"))
+    )
+
+
+def supabase_headers(prefer: str | None = None) -> dict[str, str]:
+    api_key = get_secret("SUPABASE_SERVICE_ROLE_KEY") or get_secret("SUPABASE_KEY")
+    headers = {
+        "apikey": api_key,
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    if prefer:
+        headers["Prefer"] = prefer
+
+    return headers
+
+
+def supabase_request(method: str, endpoint: str, payload: dict | None = None, prefer: str | None = None):
+    base_url = get_secret("SUPABASE_URL").rstrip("/")
+    url = f"{base_url}/rest/v1/{endpoint}"
+    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    req = request.Request(
+        url,
+        data=data,
+        headers=supabase_headers(prefer),
+        method=method,
+    )
+
+    try:
+        with request.urlopen(req, timeout=10) as response:
+            body = response.read().decode("utf-8")
+            return json.loads(body) if body else None
+    except error.HTTPError as exc:
+        details = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Supabase request failed ({exc.code}): {details}") from exc
+    except error.URLError as exc:
+        raise RuntimeError(f"Could not connect to Supabase: {exc.reason}") from exc
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def load_template_overrides() -> dict[tuple[str, str], str]:
+    if not supabase_configured():
+        return {}
+
+    rows = supabase_request(
+        "GET",
+        "template_overrides?select=section,template_name,content",
+    ) or []
+
+    return {
+        (row["section"], row["template_name"]): row["content"]
+        for row in rows
+    }
+
+
+def get_template_text(section: str, template_name: str, default_text: str) -> str:
+    try:
+        overrides = load_template_overrides()
+    except RuntimeError:
+        return default_text
+
+    return overrides.get((section, template_name), default_text)
+
+
+def save_template_override(section: str, template_name: str, content: str) -> None:
+    payload = {
+        "section": section,
+        "template_name": template_name,
+        "content": content,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    supabase_request(
+        "POST",
+        "template_overrides?on_conflict=section,template_name",
+        payload=payload,
+        prefer="resolution=merge-duplicates,return=minimal",
+    )
+    load_template_overrides.clear()
+
+
+def delete_template_override(section: str, template_name: str) -> None:
+    section_q = parse.quote(section, safe="")
+    template_q = parse.quote(template_name, safe="")
+    endpoint = (
+        "template_overrides"
+        f"?section=eq.{section_q}&template_name=eq.{template_q}"
+    )
+    supabase_request("DELETE", endpoint, prefer="return=minimal")
+    load_template_overrides.clear()
+
+
+def validate_template_placeholders(section: str, template_name: str, content: str) -> list[str]:
+    expected: dict[tuple[str, str], list[str]] = {
+        ("TPD", "TPD informing"): ["(client_name)", "[tpd_accounts_phrase_without_article]", "(card_number)"],
+        ("TPD", "TPD informing + KYC"): ["(client_name)", "[tpd_accounts_phrase_without_article]", "(card_number)"],
+        ("TPD", "TPD docs request"): ["(client_name)", "[tpd_accounts_phrase_without_article]", "(card_number)", "(third_party_name)"],
+        ("TPD", "TPD docs request + KYC"): ["(client_name)", "[tpd_accounts_phrase_without_article]", "(card_number)", "(third_party_name)"],
+        ("TPD", "TPD APS docs request"): ["(client_name)"],
+        ("TPD", "TPD Corporate card"): ["(client_name)", "(card_number)", "(third_party_name)"],
+        ("TPD", "Docs provided - closing ticket"): ["(card_number)"],
+        ("Antifraud", "Liveness request"): ["[Verification Link]"],
+        ("Antifraud", "CR severe deposit/withdrawal"): ["[Client's Name]"],
+    }
+
+    return [
+        placeholder
+        for placeholder in expected.get((section, template_name), [])
+        if placeholder not in content
+    ]
 
 
 # =========================
@@ -190,8 +316,8 @@ def get_antifraud_missing_fields(template_key: str, verification_link: str, clie
 # Tabs
 # =========================
 
-tab_sof_kyc, tab_tpd, tab_light, tab_antifraud = st.tabs(
-    ["SOF/KYC", "TPD", "Light check", "Antifraud"]
+tab_sof_kyc, tab_tpd, tab_light, tab_antifraud, tab_admin = st.tabs(
+    ["SOF/KYC", "TPD", "Light check", "Antifraud", "Admin"]
 )
 
 
@@ -587,7 +713,11 @@ If you have any further questions or need assistance, please feel free to contac
                 + "."
             )
 
-        raw_text = tpd_templates[selected_tpd_template]
+        raw_text = get_template_text(
+            "TPD",
+            selected_tpd_template,
+            tpd_templates[selected_tpd_template]
+        )
         final_text = apply_tpd_placeholders(raw_text, client_name, tpd_entries)
 
         st.text_area("Result:", final_text, height=560, key="tpd_result")
@@ -705,7 +835,11 @@ Would you please be so kind and provide us with the requested documents."""
     )
 
     if st.button("Generate text", key="generate_light"):
-        text = light_templates[selected_light_template]
+        text = get_template_text(
+            "Light check",
+            selected_light_template,
+            light_templates[selected_light_template]
+        )
 
         st.text_area("Result:", text, height=430, key="light_result")
         render_copy_button(text, "copyButtonLight")
@@ -830,7 +964,11 @@ We appreciate your prompt attention to this matter and your continued cooperatio
                 + "."
             )
 
-        raw_text = antifraud_templates[selected_antifraud_template]
+        raw_text = get_template_text(
+            "Antifraud",
+            selected_antifraud_template,
+            antifraud_templates[selected_antifraud_template]
+        )
         text = apply_antifraud_placeholders(
             raw_text,
             verification_link,
@@ -839,4 +977,133 @@ We appreciate your prompt attention to this matter and your continued cooperatio
 
         st.text_area("Result:", text, height=480, key="antifraud_result")
         render_copy_button(text, "copyButtonAntifraud")
-        
+
+# =========================
+# TAB 5: ADMIN
+# =========================
+
+with tab_admin:
+    st.subheader("Template editor")
+
+    admin_password = get_secret("ADMIN_PASSWORD")
+
+    if not admin_password:
+        st.info(
+            "Admin mode is disabled. Add ADMIN_PASSWORD to Streamlit Secrets to enable it."
+        )
+    else:
+        entered_password = st.text_input(
+            "Admin password",
+            type="password",
+            key="admin_password_input",
+        )
+
+        if entered_password == admin_password:
+            if not supabase_configured():
+                st.warning(
+                    "Supabase is not configured. Add SUPABASE_URL and "
+                    "SUPABASE_SERVICE_ROLE_KEY to Streamlit Secrets."
+                )
+            else:
+                sections = {
+                    "TPD": tpd_templates,
+                    "Light check": light_templates,
+                    "Antifraud": antifraud_templates,
+                }
+
+                selected_admin_section = st.selectbox(
+                    "Section",
+                    options=list(sections.keys()),
+                    key="admin_section",
+                )
+
+                selected_admin_template = st.selectbox(
+                    "Template",
+                    options=list(sections[selected_admin_section].keys()),
+                    key="admin_template",
+                )
+
+                default_admin_text = sections[selected_admin_section][selected_admin_template]
+
+                try:
+                    current_admin_text = get_template_text(
+                        selected_admin_section,
+                        selected_admin_template,
+                        default_admin_text,
+                    )
+                    has_override = (
+                        selected_admin_section,
+                        selected_admin_template,
+                    ) in load_template_overrides()
+                except RuntimeError as exc:
+                    st.error(str(exc))
+                    current_admin_text = default_admin_text
+                    has_override = False
+
+                if has_override:
+                    st.caption("This template currently uses a saved custom version.")
+                else:
+                    st.caption("This template currently uses the default version from app.py.")
+
+                editor_key = (
+                    f"admin_editor_{selected_admin_section}_{selected_admin_template}"
+                )
+
+                edited_admin_text = st.text_area(
+                    "Template text",
+                    value=current_admin_text,
+                    height=430,
+                    key=editor_key,
+                )
+
+                missing_placeholders = validate_template_placeholders(
+                    selected_admin_section,
+                    selected_admin_template,
+                    edited_admin_text,
+                )
+
+                if missing_placeholders:
+                    st.warning(
+                        "The edited text is missing the following placeholder(s): "
+                        + ", ".join(missing_placeholders)
+                        + ". The template can still be saved, but automatic field replacement may no longer work as expected."
+                    )
+
+                st.markdown("Preview")
+                st.text_area(
+                    "Preview text",
+                    value=edited_admin_text,
+                    height=220,
+                    disabled=True,
+                    key=f"admin_preview_{selected_admin_section}_{selected_admin_template}",
+                )
+
+                col_save, col_restore = st.columns(2)
+
+                with col_save:
+                    if st.button("Save template", type="primary", key="admin_save_template"):
+                        try:
+                            save_template_override(
+                                selected_admin_section,
+                                selected_admin_template,
+                                edited_admin_text,
+                            )
+                            st.success("Template saved successfully.")
+                        except RuntimeError as exc:
+                            st.error(str(exc))
+
+                with col_restore:
+                    if st.button("Restore default", key="admin_restore_template"):
+                        try:
+                            delete_template_override(
+                                selected_admin_section,
+                                selected_admin_template,
+                            )
+                            st.success("Default template restored.")
+                            st.rerun()
+                        except RuntimeError as exc:
+                            st.error(str(exc))
+
+        elif entered_password:
+            st.error("Incorrect password.")
+
