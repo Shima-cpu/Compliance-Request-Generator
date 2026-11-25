@@ -11,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("AML request templates")
+st.title("AML ToolKit")
 
 
 # =========================
