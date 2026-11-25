@@ -53,6 +53,16 @@ def render():
     if d.empty: st.info('No transactions in this selection.'); return
     p=breakdown(d,'Payment System'); a,b=p[['Total In','Total Out']].sum(); money=lambda n:f'${n:,.2f}'
     c=st.columns(2); c[0].metric('Total In',money(a)); c[1].metric('Total Out',money(b)); c=st.columns(2); c[0].metric('Net deposits',money(a-b)); c[1].metric('Withdrawal / Deposit ratio',f'{b/a:.2%}' if a else 'N/A')
+    first_withdrawal = df.loc[df.TransactionType.eq('withdrawal'), 'UpdateDate'].min()
+    before = df.TransactionType.eq('deposit')
+    if pd.notna(first_withdrawal):
+        before &= df.UpdateDate.lt(first_withdrawal)
+    initial_deposits = df.loc[before, 'Transaction Amount USD'].sum()
+    st.metric('Deposits before first withdrawal', money(initial_deposits))
+    if pd.notna(first_withdrawal):
+        st.caption(f'First withdrawal: {first_withdrawal:%d.%m.%Y} | Full uploaded history, all payment systems')
+    else:
+        st.caption('No withdrawals in uploaded history | Full uploaded history, all payment systems')
     st.subheader('Payment system breakdown')
     st.caption('Green: deposits | Blue-gray: withdrawals. All bars share the same scale.')
     scale=max(float(p[['Total In','Total Out']].max().max()),1)
