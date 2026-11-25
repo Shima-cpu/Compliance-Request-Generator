@@ -24,7 +24,6 @@ def breakdown(df, key):
 
 def render():
     st.subheader('Transaction Analyzer')
-    st.caption('USD amounts from the uploaded export. Files are processed in the app session, not saved to Supabase.')
     f=st.file_uploader('Upload transaction history',type=['xlsx','csv'],key='ta_upload')
     if not f: return
     try: df=prepare(f)
@@ -37,8 +36,6 @@ def render():
     if dup.any():
         st.warning(f'{dup.sum()} rows share a BalanceID. Review before relying on totals; duplicates are not automatically removed.')
         with st.expander('Duplicate IDs'): st.dataframe(df.loc[dup])
-    else: st.caption('No duplicate non-empty BalanceID values detected.')
-    st.caption(f"Export coverage: {df.UpdateDate.min():%d.%m.%Y} - {df.UpdateDate.max():%d.%m.%Y}. No execution-status column is required; verify that the export contains completed operations only.")
     mode=st.radio('Analysis period',['Last 18 months','Entire period','Custom'],horizontal=True,key='ta_period')
     today=pd.Timestamp(date.today())
     if mode=='Last 18 months': start=today-pd.DateOffset(months=18); end=today
@@ -66,13 +63,17 @@ def render():
     st.dataframe(p.style.format('${:,.2f}'),use_container_width=True)
     d['Month']=d.UpdateDate.dt.to_period('M').astype(str)
     monthly=breakdown(d,'Month').sort_index(); st.subheader('Monthly activity'); st.bar_chart(monthly[['Total In','Total Out']])
-    for key in ['TradingAccount','Wallet']:
-        if key in d:
-            with st.expander('Breakdown by '+key): st.dataframe(breakdown(d,key).style.format('${:,.2f}'),use_container_width=True)
+    if 'Wallet' in d:
+        with st.expander('Breakdown by wallet'):
+            st.dataframe(breakdown(d,'Wallet').style.format('${:,.2f}'),use_container_width=True)
     summary=f'During the reviewed period ({start:%d.%m.%Y} - {end:%d.%m.%Y}), the client deposited {money(a)} and withdrew {money(b)}. Net deposits amounted to {money(a-b)}.'
     st.text_area('Case summary',summary,key='ta_summary_'+str(hash(summary)))
-    st.caption('Net deposits are not equivalent to confirmed source of funds or proven redeposits.')
     out=io.BytesIO()
     with pd.ExcelWriter(out,engine='openpyxl') as writer:
         p.to_excel(writer,sheet_name='Payment systems'); monthly.to_excel(writer,sheet_name='Monthly'); d.to_excel(writer,sheet_name='Transactions',index=False)
     st.download_button('Download Excel analysis',out.getvalue(),'transaction_analysis.xlsx',mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    with st.expander('Analysis notes'):
+        st.caption(f"Export coverage: {df.UpdateDate.min():%d.%m.%Y} - {df.UpdateDate.max():%d.%m.%Y}.")
+        st.caption('Amounts are taken from Transaction Amount USD. Execution status is not checked; use completed operations only.')
+        st.caption('Net deposits are not equivalent to confirmed source of funds or proven redeposits.')
+        st.caption('Files are processed in the app session, not saved to Supabase.')
