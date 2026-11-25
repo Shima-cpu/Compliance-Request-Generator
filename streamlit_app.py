@@ -316,8 +316,8 @@ def get_antifraud_missing_fields(template_key: str, verification_link: str, clie
 # Tabs
 # =========================
 
-tab_sof_kyc, tab_tpd, tab_light, tab_antifraud, tab_admin = st.tabs(
-    ["SOF/KYC", "TPD", "Light check", "Antifraud", "Admin"]
+tab_sof_kyc, tab_tpd, tab_light, tab_antifraud, tab_analyzer, tab_admin = st.tabs(
+    ["SOF/KYC", "TPD", "Light check", "Antifraud", "Transaction Analyzer", "Admin"]
 )
 
 
@@ -1159,3 +1159,10 @@ with tab_admin:
 
         elif entered_password:
             st.error("Incorrect password.")
+
+with tab_analyzer:
+    try:
+        from transaction_analyzer import render
+        render()
+    except ImportError as exc:
+        st.error(f"Transaction Analyzer dependency missing: {exc}")
