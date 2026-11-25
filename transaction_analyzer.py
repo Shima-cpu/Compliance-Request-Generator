@@ -25,6 +25,7 @@ def breakdown(df, key):
 def render():
     st.subheader('Transaction Analyzer')
     f=st.file_uploader('Upload transaction history',type=['xlsx','csv'],key='ta_upload')
+    st.caption("Use completed transactions only.")
     if not f: return
     try: df=prepare(f)
     except Exception as e: st.error(str(e)); return
@@ -45,6 +46,7 @@ def render():
         if len(dates)!=2: return
         start,end=map(pd.Timestamp,dates)
     st.caption(f'{start:%d.%m.%Y} - {end:%d.%m.%Y} (inclusive)')
+    st.caption(f'Available transaction history: {df.UpdateDate.min():%d.%m.%Y} – {df.UpdateDate.max():%d.%m.%Y}')
     systems=st.multiselect('Payment systems (empty = all)',sorted(df['Payment System'].unique()),key='ta_ps')
     d=df[(df.UpdateDate>=start)&(df.UpdateDate<end+pd.Timedelta(days=1))].copy()
     if systems: d=d[d['Payment System'].isin(systems)]
@@ -72,8 +74,3 @@ def render():
     with pd.ExcelWriter(out,engine='openpyxl') as writer:
         p.to_excel(writer,sheet_name='Payment systems'); monthly.to_excel(writer,sheet_name='Monthly'); d.to_excel(writer,sheet_name='Transactions',index=False)
     st.download_button('Download Excel analysis',out.getvalue(),'transaction_analysis.xlsx',mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    with st.expander('Analysis notes'):
-        st.caption(f"Export coverage: {df.UpdateDate.min():%d.%m.%Y} - {df.UpdateDate.max():%d.%m.%Y}.")
-        st.caption('Amounts are taken from Transaction Amount USD. Execution status is not checked; use completed operations only.')
-        st.caption('Net deposits are not equivalent to confirmed source of funds or proven redeposits.')
-        st.caption('Files are processed in the app session, not saved to Supabase.')
