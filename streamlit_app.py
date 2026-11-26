@@ -562,10 +562,8 @@ If you have any questions, please contact us."""
 # TAB 2: TPD
 # =========================
 
-if page == 'TPD':
-    st.subheader("TPD request template")
-
-    tpd_templates = {
+# Shared template definitions (also used by Admin).
+tpd_templates = {
         "TPD informing": """Dear (client_name),
 
 To comply with the Financial Services Commission of Belize and our anti-money laundering obligations, RoboForex Ltd must periodically verify and monitor our clients' personal information.
@@ -729,7 +727,184 @@ We confirm that all documents have been successfully received and reviewed. Plea
 After the refund is completed in full you will be able to use your own cards without any restrictions.
 
 If you have any further questions or need assistance, please feel free to contact us."""
-    }
+}
+
+
+light_templates = {
+        "Initial request": """Hello, 
+ 
+Kindly note, that in accordance with the c. 4.4, 4.6, 4.9, and 13.18 of the Client Agreement we ask you to provide us with a selfie with your ID in your hands next to the computer/laptop with an open RoboForex Members area. 
+ 
+Please provide a good quality photo taken from a short distance in good lighting. All ID data must be clearly visible, while it is also clearly visible that it is the passport holder who holds the document in his hands. 
+ 
+Please upload the requested data as a reply to this ticket/email. To help us review your request as quickly as possible, we kindly ask you to continue our communication in this ticket and avoid submitting the requested information in a separate tickets or to other departments.""",
+
+        "WD OK": """Hello,
+
+Thank you for providing the requested documents.
+
+Please withdraw all of your funds by performing a withdrawal request.
+
+We kindly appreciate your cooperation.""",
+
+        "LOW quality statements": """Hello,
+
+Please note that the quality of your bank statements is poor. Please provide statements of better quality and highlight the salary transactions.
+
+We kindly appreciate your cooperation.""",
+
+        "UB": """Dear Client,
+
+Thank you for providing the requested documents.
+
+Please also provide a recent utility bill confirming your current residential address.
+
+Please avoid creating new tickets and keep all communication within the existing open ticket. This will help us process your request as soon as possible.
+
+Please note that creating a new ticket will move your request to the end of the processing queue and may result in further delays.
+
+Thank you for your cooperation.""",
+
+        "Under review": """Hello,
+
+Please note that your documents are under review. Kindly wait for updates.
+
+We kindly appreciate your cooperation.""",
+
+        "LOW quality ID": """Hello,
+
+Please note that all data of your ID and Member area should be clearly visible. Kindly provide a photo of a better quality.""",
+
+        "Selfie with Proof of address with current date": """Hello,
+
+Please take a selfie holding your Proof of Address in one hand and a piece of paper with the current date in the other hand.
+
+We kindly appreciate your cooperation.""",
+
+        "Bank card verif.": """Please pass bank card verification used for deposit ******. Please provide photos of both sides of bank card.
+
+Please sign the Card, Hide the CVC/CVV code. You need to hide all card numbers except the expiry date, the first 6 and last 4 numbers of the card.
+
+If the bank cards are unnamed, please provide us with a screenshot from your internet banking from where we will be able to see your name, surname, bank card number""",
+
+        "Still under review": """Dear ****,
+
+We sincerely thank you for your patience.
+
+Kindly be informed that your case is still under review.
+
+We do our best to speed up the process and provide the best service to each client.
+
+Please also note that we will try to resolve your issue as a higher priority as soon as possible.
+
+We kindly appreciate your cooperation.""",
+
+        "Ignoring. Ticket closure": """Dear Client
+
+We hope you’re well.
+
+As we have not received a response to our recent request for documentation, we will proceed to close this ticket for now.
+Please note that we still require the requested documents to continue with your case. You may reply to this email at any time with the documents, and we will reopen the ticket immediately.
+
+Thank you for your cooperation and understanding.
+
+Should you have any questions, feel free to reply to this email or contact our support team—we’re here to help.
+
+This ticket will now be closed.""",
+
+        "Reply to toxic client": """Hello,
+
+Please note that in accordance with the Client Agreement, clause 5.2 - The term for consideration of the Client's request is five working days. In some cases, the review period may be extended.
+
+Kindly note that we have to follow our internal procedures to provide best service to our clients.
+
+Please take note that your personal data are kept safe within the company in accordance with our privacy policy, GDPR, and AML Law requirements. Document(s) will be used in order to have your personal data updated in accordance to the AML Law requirements.
+
+Please find more details by following links:
+
+- https://roboforex.com/about/company/documents/
+- https://roboforex.com/about/client/security-policy/
+
+Would you please be so kind and provide us with the requested documents."""
+}
+
+
+antifraud_templates = {
+        "Liveness request": """Dear Trader,
+
+We hope you’re doing well.
+
+As part of our ongoing commitment to maintaining a secure and seamless trading environment, we occasionally ask clients to complete a brief account update. This helps us ensure that your account information remains accurate and that you continue to enjoy uninterrupted access to all services.
+
+Please follow the link below to complete a short verification at your convenience:
+
+[Verification Link]
+
+The process should only take a few minutes. If you have any questions or need assistance, our team will be happy to help.
+
+Thank you for your cooperation and for trading with us.""",
+
+        "WB fraud (deposit withdrawn)": """Dear Client,
+
+Following a review of your account activity, the Company has identified violations of the Client Agreement, including misuse of the bonus program and issues related to the verification process.
+
+In accordance with Clauses 4.8 and 4.15 of the Client Agreement, the Company has decided to terminate the Agreement with immediate effect and permanently close your account.
+
+Please note that your deposited funds were previously withdrawn in full. The remaining balance has been cancelled and is not eligible for withdrawal.
+
+This decision is final.""",
+
+        "WB fraud (plain termination, no deposit)": """Dear Client,
+
+Following a review of your account activity, the Company has identified violations of the Client Agreement.
+
+In accordance with Clauses 4.8 and 4.15 of the Client Agreement, the Company has decided to terminate the Agreement with immediate effect and permanently close your account.
+
+This decision is final.""",
+
+        "Card/bank verification": """Dear Trader,
+
+We kindly ask you to provide a bank statement related to the card you used to make deposits to your trading account.
+
+Please ensure that the document meets the following requirements:
+
+- Issued by your bank (PDF or printed copy);
+- Clearly shows your full name;
+- Displays the bank’s name and address;
+- Contains details of the card used for the deposit (e.g. last 4 digits or transaction reference);
+- Shows the relevant transaction(s) to our company, if possible;
+- Is recent (typically within the last 3 months);
+
+Please note that the statement must correspond specifically to the card used for funding your account, as this is required for verification and compliance purposes.
+
+You may upload the document via your client portal or reply to this email with the attachment.
+
+If you have any questions or need assistance, please feel free to contact us.""",
+
+        "CR severe deposit/withdrawal": """Dear [Client's Name],
+
+As part of our ongoing compliance procedures in accordance with international Anti-Money Laundering (AML) standards and our internal policies, we conduct regular reviews of incoming transactions.
+
+We have identified that recent transactions at your account were processed through third-party exchange services categorized as high-risk by industry-standard risk databases and monitoring tools.
+
+In light of this, we kindly request that you provide:
+
+- A brief explanation of the purpose and necessity of using these particular exchange platforms, specifically of wallet;
+- Any supporting documents, such as transaction confirmations, screenshots, sender details, or payment receipts;
+
+Please note that if a transaction is identified as high-risk, we may temporarily suspend processing until the origin and purpose of the funds are verified. Repeated use of high-risk third-party services or failure to provide adequate clarification may result in the termination of your account, in accordance with our AML obligations and the Client Agreement.
+
+Please confirm this wallet or exchange will not be used for your further deposits or withdrawals.
+
+We strongly recommend using regulated exchanges only.
+
+We appreciate your prompt attention to this matter and your continued cooperation."""
+}
+
+
+if page == 'TPD':
+    st.subheader("TPD request template")
+
 
     selected_tpd_template = st.selectbox(
         "Choose TPD request:",
@@ -852,103 +1027,6 @@ If you have any further questions or need assistance, please feel free to contac
 if page == 'Light check':
     st.subheader("Light check templates")
 
-    light_templates = {
-        "Initial request": """Hello, 
- 
-Kindly note, that in accordance with the c. 4.4, 4.6, 4.9, and 13.18 of the Client Agreement we ask you to provide us with a selfie with your ID in your hands next to the computer/laptop with an open RoboForex Members area. 
- 
-Please provide a good quality photo taken from a short distance in good lighting. All ID data must be clearly visible, while it is also clearly visible that it is the passport holder who holds the document in his hands. 
- 
-Please upload the requested data as a reply to this ticket/email. To help us review your request as quickly as possible, we kindly ask you to continue our communication in this ticket and avoid submitting the requested information in a separate tickets or to other departments.""",
-
-        "WD OK": """Hello,
-
-Thank you for providing the requested documents.
-
-Please withdraw all of your funds by performing a withdrawal request.
-
-We kindly appreciate your cooperation.""",
-
-        "LOW quality statements": """Hello,
-
-Please note that the quality of your bank statements is poor. Please provide statements of better quality and highlight the salary transactions.
-
-We kindly appreciate your cooperation.""",
-
-        "UB": """Dear Client,
-
-Thank you for providing the requested documents.
-
-Please also provide a recent utility bill confirming your current residential address.
-
-Please avoid creating new tickets and keep all communication within the existing open ticket. This will help us process your request as soon as possible.
-
-Please note that creating a new ticket will move your request to the end of the processing queue and may result in further delays.
-
-Thank you for your cooperation.""",
-
-        "Under review": """Hello,
-
-Please note that your documents are under review. Kindly wait for updates.
-
-We kindly appreciate your cooperation.""",
-
-        "LOW quality ID": """Hello,
-
-Please note that all data of your ID and Member area should be clearly visible. Kindly provide a photo of a better quality.""",
-
-        "Selfie with Proof of address with current date": """Hello,
-
-Please take a selfie holding your Proof of Address in one hand and a piece of paper with the current date in the other hand.
-
-We kindly appreciate your cooperation.""",
-
-        "Bank card verif.": """Please pass bank card verification used for deposit ******. Please provide photos of both sides of bank card.
-
-Please sign the Card, Hide the CVC/CVV code. You need to hide all card numbers except the expiry date, the first 6 and last 4 numbers of the card.
-
-If the bank cards are unnamed, please provide us with a screenshot from your internet banking from where we will be able to see your name, surname, bank card number""",
-
-        "Still under review": """Dear ****,
-
-We sincerely thank you for your patience.
-
-Kindly be informed that your case is still under review.
-
-We do our best to speed up the process and provide the best service to each client.
-
-Please also note that we will try to resolve your issue as a higher priority as soon as possible.
-
-We kindly appreciate your cooperation.""",
-
-        "Ignoring. Ticket closure": """Dear Client
-
-We hope you’re well.
-
-As we have not received a response to our recent request for documentation, we will proceed to close this ticket for now.
-Please note that we still require the requested documents to continue with your case. You may reply to this email at any time with the documents, and we will reopen the ticket immediately.
-
-Thank you for your cooperation and understanding.
-
-Should you have any questions, feel free to reply to this email or contact our support team—we’re here to help.
-
-This ticket will now be closed.""",
-
-        "Reply to toxic client": """Hello,
-
-Please note that in accordance with the Client Agreement, clause 5.2 - The term for consideration of the Client's request is five working days. In some cases, the review period may be extended.
-
-Kindly note that we have to follow our internal procedures to provide best service to our clients.
-
-Please take note that your personal data are kept safe within the company in accordance with our privacy policy, GDPR, and AML Law requirements. Document(s) will be used in order to have your personal data updated in accordance to the AML Law requirements.
-
-Please find more details by following links:
-
-- https://roboforex.com/about/company/documents/
-- https://roboforex.com/about/client/security-policy/
-
-Would you please be so kind and provide us with the requested documents."""
-    }
 
     selected_light_template = st.selectbox(
         "Choose template:",
@@ -973,77 +1051,6 @@ Would you please be so kind and provide us with the requested documents."""
 if page == 'Antifraud':
     st.subheader("Antifraud templates")
 
-    antifraud_templates = {
-        "Liveness request": """Dear Trader,
-
-We hope you’re doing well.
-
-As part of our ongoing commitment to maintaining a secure and seamless trading environment, we occasionally ask clients to complete a brief account update. This helps us ensure that your account information remains accurate and that you continue to enjoy uninterrupted access to all services.
-
-Please follow the link below to complete a short verification at your convenience:
-
-[Verification Link]
-
-The process should only take a few minutes. If you have any questions or need assistance, our team will be happy to help.
-
-Thank you for your cooperation and for trading with us.""",
-
-        "WB fraud (deposit withdrawn)": """Dear Client,
-
-Following a review of your account activity, the Company has identified violations of the Client Agreement, including misuse of the bonus program and issues related to the verification process.
-
-In accordance with Clauses 4.8 and 4.15 of the Client Agreement, the Company has decided to terminate the Agreement with immediate effect and permanently close your account.
-
-Please note that your deposited funds were previously withdrawn in full. The remaining balance has been cancelled and is not eligible for withdrawal.
-
-This decision is final.""",
-
-        "WB fraud (plain termination, no deposit)": """Dear Client,
-
-Following a review of your account activity, the Company has identified violations of the Client Agreement.
-
-In accordance with Clauses 4.8 and 4.15 of the Client Agreement, the Company has decided to terminate the Agreement with immediate effect and permanently close your account.
-
-This decision is final.""",
-
-        "Card/bank verification": """Dear Trader,
-
-We kindly ask you to provide a bank statement related to the card you used to make deposits to your trading account.
-
-Please ensure that the document meets the following requirements:
-
-- Issued by your bank (PDF or printed copy);
-- Clearly shows your full name;
-- Displays the bank’s name and address;
-- Contains details of the card used for the deposit (e.g. last 4 digits or transaction reference);
-- Shows the relevant transaction(s) to our company, if possible;
-- Is recent (typically within the last 3 months);
-
-Please note that the statement must correspond specifically to the card used for funding your account, as this is required for verification and compliance purposes.
-
-You may upload the document via your client portal or reply to this email with the attachment.
-
-If you have any questions or need assistance, please feel free to contact us.""",
-
-        "CR severe deposit/withdrawal": """Dear [Client's Name],
-
-As part of our ongoing compliance procedures in accordance with international Anti-Money Laundering (AML) standards and our internal policies, we conduct regular reviews of incoming transactions.
-
-We have identified that recent transactions at your account were processed through third-party exchange services categorized as high-risk by industry-standard risk databases and monitoring tools.
-
-In light of this, we kindly request that you provide:
-
-- A brief explanation of the purpose and necessity of using these particular exchange platforms, specifically of wallet;
-- Any supporting documents, such as transaction confirmations, screenshots, sender details, or payment receipts;
-
-Please note that if a transaction is identified as high-risk, we may temporarily suspend processing until the origin and purpose of the funds are verified. Repeated use of high-risk third-party services or failure to provide adequate clarification may result in the termination of your account, in accordance with our AML obligations and the Client Agreement.
-
-Please confirm this wallet or exchange will not be used for your further deposits or withdrawals.
-
-We strongly recommend using regulated exchanges only.
-
-We appreciate your prompt attention to this matter and your continued cooperation."""
-    }
 
     selected_antifraud_template = st.selectbox(
         "Choose Antifraud template:",
