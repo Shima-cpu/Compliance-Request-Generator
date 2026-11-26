@@ -19,37 +19,38 @@ st.set_page_config(
 # Helpers
 # =========================
 
-def js_escape(s: str) -> str:
-    return (
-        s.replace("\\", "\\\\")
-        .replace("`", "\\`")
-        .replace("${", "\\${")
-        .replace("\r", "")
-        .replace("\n", "\\n")
-    )
-
-
 def render_copy_button(text: str, button_id: str) -> None:
+    safe_text = json.dumps(text, ensure_ascii=True).replace("<", "\\u003c")
     components.html(
         f"""
-        <button id="{button_id}" style="
+        <button id="{button_id}" aria-live="polite" style="
             padding: 8px 14px;
             border-radius: 8px;
             border: 1px solid #cccccc;
             cursor: pointer;
             font-size: 14px;
-        ">
-            Copy text
-        </button>
-
+        ">Copy to clipboard</button>
         <script>
-            document.getElementById("{button_id}").addEventListener("click", function() {{
-                const text = `{js_escape(text)}`;
-                navigator.clipboard.writeText(text).then(function() {{
-                    alert("Text copied to clipboard!");
-                }}).catch(function(err) {{
-                    alert("Error copying text!");
-                }});
+            const button = document.getElementById("{button_id}");
+            let resetTimer;
+            function feedback(label, color) {{
+                clearTimeout(resetTimer);
+                button.textContent = label;
+                button.style.color = color;
+                button.style.borderColor = color;
+                resetTimer = setTimeout(() => {{
+                    button.textContent = "Copy to clipboard";
+                    button.style.color = "";
+                    button.style.borderColor = "#cccccc";
+                }}, 2000);
+            }}
+            button.addEventListener("click", async function() {{
+                try {{
+                    await navigator.clipboard.writeText({safe_text});
+                    feedback("✓ Copied!", "#299e82");
+                }} catch (err) {{
+                    feedback("Copy failed — try again", "#b45309");
+                }}
             }});
         </script>
         """,
