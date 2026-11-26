@@ -6,12 +6,13 @@ from urllib import error, parse, request
 
 
 st.set_page_config(
-    page_title="AML request templates",
-    page_icon="📄",
-    layout="centered"
+    page_title="AML Toolkit",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("AML ToolKit")
+
 
 
 # =========================
@@ -316,16 +317,74 @@ def get_antifraud_missing_fields(template_key: str, verification_link: str, clie
 # Tabs
 # =========================
 
-tab_sof_kyc, tab_tpd, tab_light, tab_antifraud, tab_analyzer, tab_admin = st.tabs(
-    ["SOF/KYC", "TPD", "Light check", "Antifraud", "Transaction Analyzer", "Admin"]
-)
+st.markdown("""
+<style>
+.block-container {max-width: 1100px; padding-top: 2.5rem;}
+[data-testid="stSidebar"] [data-testid="stButton"] button {justify-content: flex-start; text-align:left; border-radius: 8px;}
+[data-testid="stSidebar"] [data-testid="stButton"] {margin-bottom: 0.1rem;}
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {letter-spacing: .08em;}
+</style>
+""", unsafe_allow_html=True)
+
+if "toolkit_page" not in st.session_state:
+    st.session_state.toolkit_page = "Overview"
+
+def navigate(page):
+    st.session_state.toolkit_page = page
+
+page = st.session_state.toolkit_page
+
+def nav_button(label, icon):
+    st.button(f"{icon}  {label}", key=f"nav_{label}",
+              type="primary" if page == label else "secondary",
+              use_container_width=True, on_click=navigate, args=(label,))
+
+with st.sidebar:
+    st.title("🛡️ AML Toolkit")
+    nav_button("Overview", "⌂")
+    st.divider()
+    st.caption("REQUESTS")
+    nav_button("SOF/KYC", "▤")
+    nav_button("TPD", "⇄")
+    nav_button("Light check", "✓")
+    nav_button("Antifraud", "◇")
+    st.divider()
+    st.caption("ANALYSIS")
+    nav_button("Transaction Analyzer", "▥")
+    st.divider()
+    st.caption("SETTINGS")
+    nav_button("Admin", "⚙")
+
+if page == "Overview":
+    st.title("Workspace")
+    st.caption("AML Toolkit / Overview")
+    st.subheader("Quick actions")
+    tools = [
+        ("SOF/KYC", "▤", "Generate source of funds and KYC requests."),
+        ("TPD", "⇄", "Third-party deposit requests and follow-ups."),
+        ("Light check", "✓", "Standard verification requests."),
+        ("Antifraud", "◇", "Antifraud request templates."),
+        ("Transaction Analyzer", "▥", "Analyze deposits, withdrawals and payment systems."),
+    ]
+    for start in range(0, len(tools), 2):
+        cols = st.columns(2)
+        for col, (label, icon, description) in zip(cols, tools[start:start+2]):
+            with col:
+                with st.container(border=True):
+                    st.markdown(f"### {icon}  {label}")
+                    st.caption(description)
+                    st.button("Open tool", key=f"quick_{label}", use_container_width=True,
+                              on_click=navigate, args=(label,))
+else:
+    st.caption(f"AML Toolkit / {page}")
+
 
 
 # =========================
 # TAB 1: SOF/KYC
 # =========================
 
-with tab_sof_kyc:
+if page == 'SOF/KYC':
     st.subheader("SOF/KYC request template")
 
     intro_texts = {
@@ -503,7 +562,7 @@ If you have any questions, please contact us."""
 # TAB 2: TPD
 # =========================
 
-with tab_tpd:
+if page == 'TPD':
     st.subheader("TPD request template")
 
     tpd_templates = {
@@ -790,7 +849,7 @@ If you have any further questions or need assistance, please feel free to contac
 # TAB 3: LIGHT CHECK
 # =========================
 
-with tab_light:
+if page == 'Light check':
     st.subheader("Light check templates")
 
     light_templates = {
@@ -911,7 +970,7 @@ Would you please be so kind and provide us with the requested documents."""
 # TAB 4: ANTIFRAUD
 # =========================
 
-with tab_antifraud:
+if page == 'Antifraud':
     st.subheader("Antifraud templates")
 
     antifraud_templates = {
@@ -1044,7 +1103,7 @@ We appreciate your prompt attention to this matter and your continued cooperatio
 # TAB 5: ADMIN
 # =========================
 
-with tab_admin:
+if page == 'Admin':
     st.subheader("Template editor")
 
     admin_password = get_secret("ADMIN_PASSWORD")
@@ -1160,7 +1219,7 @@ with tab_admin:
         elif entered_password:
             st.error("Incorrect password.")
 
-with tab_analyzer:
+if page == 'Transaction Analyzer':
     try:
         from transaction_analyzer import render
         render()
