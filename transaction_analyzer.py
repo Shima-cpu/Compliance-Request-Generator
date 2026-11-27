@@ -1,5 +1,6 @@
 import io
 import html
+import re
 from datetime import date
 import pandas as pd
 import streamlit as st
@@ -16,6 +17,25 @@ def prepare(file):
     df['TransactionType'] = df['TransactionType'].astype(str).str.strip().str.lower()
     df['Payment System'] = df['Payment System'].fillna('(Unknown)').astype(str)
     return df
+
+def payment_group(name):
+    value = str(name).strip()
+    # Match the primary provider first, not downstream processing routes.
+    value = re.sub(r'^(?:банковский\s+перевод|bank\s+transfer)\s*\(?\s*', '', value, flags=re.IGNORECASE)
+    rules = [
+        (r'^praxis\b', 'Praxis'),
+        (r'^(?:payabl|powercash(?:21)?)\b', 'Payabl / Powercash'),
+        (r'^walletto\b', 'Walletto'),
+        (r'^mano\b', 'Mano'),
+        (r'^dfinex\b', 'DFinex'),
+        (r'^aps\b', 'APS'),
+        (r'^cardpay\b', 'CardPay'),
+        (r'^solidpayments\b', 'SolidPayments'),
+    ]
+    for pattern, group in rules:
+        if re.match(pattern, value, flags=re.IGNORECASE):
+            return group
+    return name
 
 def breakdown(df, key):
     p = df.groupby([key,'TransactionType'],dropna=False)['Transaction Amount USD'].sum().unstack(fill_value=0).reindex(columns=['deposit','withdrawal'],fill_value=0)
@@ -47,9 +67,9 @@ def render():
         start,end=map(pd.Timestamp,dates)
     st.caption(f'{start:%d.%m.%Y} - {end:%d.%m.%Y} (inclusive)')
     st.caption(f'Available transaction history: {df.UpdateDate.min():%d.%m.%Y} – {df.UpdateDate.max():%d.%m.%Y}')
-    systems=st.multiselect('Payment systems (empty = all)',sorted(df['Payment System'].unique()),key='ta_ps')
+    systems=st.multiselect('Payment systems (empty = all)',sorted(df['Payment System'].map(payment_group).unique()),key='ta_ps_grouped')
     d=df[(df.UpdateDate>=start)&(df.UpdateDate<end+pd.Timedelta(days=1))].copy()
-    if systems: d=d[d['Payment System'].isin(systems)]
+    if systems: d=d[d['Payment System'].map(payment_group).isin(systems)]
     if d.empty: st.info('No transactions in this selection.'); return
     p=breakdown(d,'Payment System'); a,b=p[['Total In','Total Out']].sum(); money=lambda n:f'${n:,.2f}'
     c=st.columns(2); c[0].metric('Total In',money(a)); c[1].metric('Total Out',money(b)); c=st.columns(2); c[0].metric('Net deposits',money(a-b)); c[1].metric('Withdrawal / Deposit ratio',f'{b/a:.2%}' if a else 'N/A')
@@ -65,8 +85,10 @@ def render():
         st.caption('No withdrawals in uploaded history | Full uploaded history, all payment systems')
     st.subheader('Payment system breakdown')
     st.caption('Green: deposits | Blue-gray: withdrawals. All bars share the same scale.')
-    scale=max(float(p[['Total In','Total Out']].max().max()),1)
-    for name,row in p.iterrows():
+    view=st.radio('Payment system view',['Grouped','Detailed'],horizontal=True,key='ta_ps_view',label_visibility='collapsed')
+    visual=p if view=='Detailed' else breakdown(d.assign(PaymentGroup=d['Payment System'].map(payment_group)),'PaymentGroup')
+    scale=max(float(visual[['Total In','Total Out']].max().max()),1)
+    for name,row in visual.iterrows():
         bars=''
         for label,color in [('Total In','#299e82'),('Total Out','#8798b5')]:
             value=float(row[label]); width=100*value/scale
